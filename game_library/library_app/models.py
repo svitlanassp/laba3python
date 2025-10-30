@@ -85,7 +85,7 @@ class Order(models.Model):
     games = models.ManyToManyField(Game, through='OrderGame')
 
     def __str__(self):
-        return f"Order #{self.id} by {self.user.username}"
+        return f"Order #{self.order_id} by {self.user.username}"
 
     class Meta:
         db_table = 'order'

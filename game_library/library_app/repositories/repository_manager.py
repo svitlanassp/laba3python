@@ -1,3 +1,4 @@
+from .game_genre_repository import GameGenreRepository
 from .user_repository import UserRepository
 from .game_repository import GameRepository
 from .library_repository import LibraryRepository
@@ -7,6 +8,7 @@ from .order_game_repository import OrderGameRepository
 from .developer_repository import DeveloperRepository
 from .publisher_repository import PublisherRepository
 from .genre_repository import GenreRepository
+
 
 class RepositoryManager:
     def __init__(self):
@@ -19,3 +21,4 @@ class RepositoryManager:
         self.developers = DeveloperRepository()
         self.publishers = PublisherRepository()
         self.genres = GenreRepository()
+        self.game_genres = GameGenreRepository()

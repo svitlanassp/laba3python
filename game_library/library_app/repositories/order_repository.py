@@ -6,7 +6,7 @@ class OrderRepository(BaseRepository):
     def __init__(self):
         super().__init__(Order)
 
-    def get_all_by_user(self, user):
-        return self.model.objects.filter(user=user)
+    def get_all_by_user_id(self, user_id):
+        return self.model.objects.filter(user_id=user_id)
     
 
