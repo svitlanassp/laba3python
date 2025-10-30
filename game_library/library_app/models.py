@@ -123,7 +123,7 @@ class OrderGame(models.Model):
     price_at_purchase = models.DecimalField(decimal_places=2, max_digits=10)
 
     def __str__(self):
-        return f"Order #{self.order.id} - {self.game.title}"
+        return f"Order #{self.order.order_id} - {self.game.title}"
 
     class Meta:
         db_table = 'order_game'
