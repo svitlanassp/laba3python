@@ -20,5 +20,19 @@ class BaseRepository:
             print("Error creating object:", e)
             return None
 
+    def update(self, pk, **kwargs):
+        obj = self.get_by_id(pk)
+        if obj:
+            for key, value in kwargs.items():
+                setattr(obj, key, value)
+            obj.save()
+        return obj
+
+    def delete(self, pk):
+        obj = self.get_by_id(pk)
+        if obj:
+            obj.delete()
+            return True
+        return False
 
 
