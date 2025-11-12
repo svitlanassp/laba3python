@@ -3,12 +3,16 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .serializers import UserSerializer, LibrarySerializer, OrderSerializer, LibraryGameSerializer, OrderGameSerializer
 from library_app.repositories.repository_manager import RepositoryManager
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 repo_manager = RepositoryManager()
 
 class BaseViewSet(viewsets.ViewSet):
     repo = None
     serializer_class = None
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
         items = self.repo.get_all()
