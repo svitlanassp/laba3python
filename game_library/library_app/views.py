@@ -1,10 +1,14 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
 from library_app.repositories.repository_manager import RepositoryManager
 from .serializers import (
     GameSerializer, GameWriteSerializer, DeveloperSerializer,
-    PublisherSerializer, GenreSerializer, GameGenreSerializer
+    PublisherSerializer, GenreSerializer, GameGenreSerializer,
+    UserSerializer, LibrarySerializer, OrderSerializer,
+    LibraryGameSerializer, OrderGameSerializer
 )
 
 repo_manager = RepositoryManager()
@@ -13,6 +17,8 @@ class BaseViewSet(viewsets.ViewSet):
     repository = None
     serializer_class = None
     write_serializer_class = None
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def list(self, request):
         queryset = self.repository.get_all()
@@ -54,38 +60,34 @@ class BaseViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+class UserViewSet(BaseViewSet):
+    repository = repo_manager.users
+    serializer_class = UserSerializer
 
-class GameViewSet(BaseViewSet):
-    repository = repo_manager.games
-    serializer_class = GameSerializer
-    write_serializer_class = GameWriteSerializer # Окремий для POST/PUT
-
-
-class DeveloperViewSet(BaseViewSet):
-    repository = repo_manager.developers
-    serializer_class = DeveloperSerializer
-    write_serializer_class = DeveloperSerializer
-
-
-class PublisherViewSet(BaseViewSet):
-    repository = repo_manager.publishers
-    serializer_class = PublisherSerializer
-    write_serializer_class = PublisherSerializer
-
-
-class GenreViewSet(BaseViewSet):
-    repository = repo_manager.genres
-    serializer_class = GenreSerializer
-    write_serializer_class = GenreSerializer
+class OrderViewSet(BaseViewSet):
+    repository = repo_manager.orders
+    serializer_class = OrderSerializer
 
     @action(detail=False, methods=['get'])
-    def report_game_count(self, request):
-        report_data = self.repository.get_genre_game_count_report()
-        return Response(report_data)
+    def spending_report(self,request):
+        report_data = self.repository.get_user_spending_report()
+        return Response(list(report_data))
 
 
-class GameGenreViewSet(BaseViewSet):
-    repository = repo_manager.game_genres
-    serializer_class = GameGenreSerializer
-    write_serializer_class = GameGenreSerializer
+class LibraryViewSet(BaseViewSet):
+    repository = repo_manager.libraries
+    serializer_class = LibrarySerializer
+
+class LibraryGameViewSet(BaseViewSet):
+    repository = repo_manager.library_games
+    serializer_class = LibraryGameSerializer
+
+    @action(detail=False, methods=['get'])
+    def popularity_report(self, request):
+        report_data = self.repository.get_game_popularity_report()
+        return Response(list(report_data))
+
+class OrderGameViewSet(BaseViewSet):
+    repository = repo_manager.order_games
+    serializer_class = OrderGameSerializer
 

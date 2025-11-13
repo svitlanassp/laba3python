@@ -7,8 +7,8 @@ class GenreRepository(BaseRepository):
     def __init__(self):
         super().__init__(Genre)
 
-        def get_genre_game_count_report(self):
-            report_data = Genre.objects.annotate(
-                game_count=Count('gamegenre_set')
-            ).values('name', 'game_count')
-            return list(report_data)
+    def get_genre_game_count_report(self):
+        report_data = Genre.objects.annotate(
+            game_count=Count('gamegenre_set')
+        ).values('name', 'game_count')
+        return list(report_data)
