@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-
+from rest_framework.decorators import action
 from library_app.repositories.repository_manager import RepositoryManager
 from .serializers import (
     GameSerializer, GameWriteSerializer, DeveloperSerializer,
@@ -55,26 +55,6 @@ class BaseViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-class CreateReadOnlyViewSet(BaseViewSet):
-    def update(self, request, pk=None):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def destroy(self, request, pk=None):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-class ReadOnlyViewSet(BaseViewSet):
-    def create(self, request):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def update(self, request, pk=None):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def destroy(self, request, pk=None):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-
 class GameViewSet(BaseViewSet):
     repository = repo_manager.games
     serializer_class = GameSerializer
@@ -93,13 +73,18 @@ class PublisherViewSet(BaseViewSet):
     write_serializer_class = PublisherSerializer
 
 
-class GenreViewSet(CreateReadOnlyViewSet):
+class GenreViewSet(BaseViewSet):
     repository = repo_manager.genres
     serializer_class = GenreSerializer
     write_serializer_class = GenreSerializer
 
+    @action(detail=False, methods=['get'])
+    def report_game_count(self, request):
+        report_data = self.repository.get_genre_game_count_report()
+        return Response(report_data)
 
-class GameGenreViewSet(ReadOnlyViewSet):
+
+class GameGenreViewSet(BaseViewSet):
     repository = repo_manager.game_genres
     serializer_class = GameGenreSerializer
     write_serializer_class = GameGenreSerializer
