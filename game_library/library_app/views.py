@@ -1,10 +1,15 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .serializers import UserSerializer, LibrarySerializer, OrderSerializer, LibraryGameSerializer, OrderGameSerializer
-from library_app.repositories.repository_manager import RepositoryManager
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
+from library_app.repositories.repository_manager import RepositoryManager
+from .serializers import (
+    GameSerializer, GameWriteSerializer, DeveloperSerializer,
+    PublisherSerializer, GenreSerializer, GameGenreSerializer,
+    UserSerializer, LibrarySerializer, OrderSerializer,
+    LibraryGameSerializer, OrderGameSerializer
+)
 
 repo_manager = RepositoryManager()
 

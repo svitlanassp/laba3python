@@ -1,7 +1,6 @@
-from django.db.models import Count
-
 from library_app.models import Genre
 from library_app.repositories.base_repository import BaseRepository
+from django.db.models import Count
 
 
 class GenreRepository(BaseRepository):

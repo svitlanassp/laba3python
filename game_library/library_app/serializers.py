@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Order, Library, LibraryGame, OrderGame
+from .models import User, Order, Library, LibraryGame, OrderGame, Game, Developer, Publisher, Genre, GameGenre
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,3 +38,44 @@ class OrderGameSerializer(serializers.ModelSerializer):
         model = OrderGame
         fields = ['id','order','game','game_title','price_at_purchase']
         read_only_fields = ['price_at_purchase']
+
+class DeveloperSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Developer
+        fields = ['developer_id', 'name', 'description']
+
+class PublisherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Publisher
+        fields = ['publisher_id', 'name', 'description']
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ['genre_id', 'name']
+
+class GameGenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GameGenre
+        fields = ['id', 'game', 'genre'] 
+
+class GameSerializer(serializers.ModelSerializer):
+    developer = serializers.StringRelatedField()
+    publisher = serializers.StringRelatedField()
+    genre = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = Game
+        fields = [
+            'game_id', 'title', 'description', 'price',
+            'release_date', 'developer', 'publisher', 'genre'
+        ]
+
+
+class GameWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        fields = [
+            'title', 'description', 'price', 'release_date',
+            'developer', 'publisher', 'genre'
+        ]
