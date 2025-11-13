@@ -13,7 +13,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['order_id','user','username','total_amount','status','created_at']
-        read_only_fields = ['created_at','total_amount']
+        read_only_fields = ['created_at']
 
 class LibrarySerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username',read_only=True)
@@ -79,3 +79,4 @@ class GameWriteSerializer(serializers.ModelSerializer):
             'title', 'description', 'price', 'release_date',
             'developer', 'publisher', 'genre'
         ]
+
