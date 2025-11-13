@@ -90,4 +90,37 @@ class LibraryGameViewSet(BaseViewSet):
 class OrderGameViewSet(BaseViewSet):
     repository = repo_manager.order_games
     serializer_class = OrderGameSerializer
+class GameViewSet(BaseViewSet):
+    repository = repo_manager.games
+    serializer_class = GameSerializer
+    write_serializer_class = GameWriteSerializer
+
+
+class DeveloperViewSet(BaseViewSet):
+    repository = repo_manager.developers
+    serializer_class = DeveloperSerializer
+    write_serializer_class = DeveloperSerializer
+
+
+class PublisherViewSet(BaseViewSet):
+    repository = repo_manager.publishers
+    serializer_class = PublisherSerializer
+    write_serializer_class = PublisherSerializer
+
+
+class GenreViewSet(BaseViewSet):
+    repository = repo_manager.genres
+    serializer_class = GenreSerializer
+    write_serializer_class = GenreSerializer
+
+    @action(detail=False, methods=['get'])
+    def report_game_count(self, request):
+        report_data = self.repository.get_genre_game_count_report()
+        return Response(report_data)
+
+
+class GameGenreViewSet(BaseViewSet):
+    repository = repo_manager.game_genres
+    serializer_class = GameGenreSerializer
+    write_serializer_class = GameGenreSerializer
 
