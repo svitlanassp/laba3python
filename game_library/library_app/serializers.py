@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from library_app.models import User, Order, Library, LibraryGame, OrderGame
+from .models import User, Order, Library, LibraryGame, OrderGame
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
