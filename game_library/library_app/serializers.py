@@ -64,12 +64,32 @@ class GameSerializer(serializers.ModelSerializer):
     publisher_name = serializers.StringRelatedField(source='publisher', read_only=True)
     genre_names = serializers.StringRelatedField(source='genre', many=True, read_only=True)
 
+    developer_id = serializers.PrimaryKeyRelatedField(
+        source='developer',
+        queryset=Developer.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
+    publisher_id = serializers.PrimaryKeyRelatedField(
+        source='publisher',
+        queryset=Publisher.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
+    genre_id = serializers.PrimaryKeyRelatedField(
+        source='genre',
+        many=True,
+        queryset=Genre.objects.all()
+    )
+
     class Meta:
         model = Game
         fields = [
             'game_id', 'title', 'description', 'price',
             'release_date',
             'developer_name', 'publisher_name', 'genre_names',
-            'developer', 'publisher', 'genre'
+            'developer_id', 'publisher_id', 'genre_id'
         ]
 

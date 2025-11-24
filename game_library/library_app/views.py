@@ -63,7 +63,7 @@ class OrderViewSet(BaseViewSet):
     serializer_class = OrderSerializer
 
     @action(detail=False, methods=['get'])
-    def spending_report(self,request):
+    def report(self,request):
         report_data = self.repo.get_user_spending_report()
         return Response(list(report_data))
 
@@ -77,13 +77,14 @@ class LibraryGameViewSet(BaseViewSet):
     serializer_class = LibraryGameSerializer
 
     @action(detail=False, methods=['get'])
-    def popularity_report(self, request):
+    def report(self, request):
         report_data = self.repo.get_game_popularity_report()
         return Response(list(report_data))
 
 class OrderGameViewSet(BaseViewSet):
     repo = repo_manager.order_games
     serializer_class = OrderGameSerializer
+
 
 class GameViewSet(BaseViewSet):
     repo = repo_manager.games
@@ -103,7 +104,7 @@ class GenreViewSet(BaseViewSet):
     serializer_class = GenreSerializer
 
     @action(detail=False, methods=['get'])
-    def report_game_count(self, request):
+    def count(self, request):
         report_data = self.repo.get_genre_game_count_report()
         return Response(report_data)
 
