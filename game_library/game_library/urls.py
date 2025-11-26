@@ -18,4 +18,5 @@ router.register(r'game-genres', views.GameGenreViewSet, basename='gamegenre')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('client-app/', include('client_app.urls')),
 ]

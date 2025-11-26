@@ -1,6 +1,7 @@
+from django.db.models import Count
+
 from library_app.models import Genre
 from library_app.repositories.base_repository import BaseRepository
-from django.db.models import Count
 
 
 class GenreRepository(BaseRepository):
@@ -9,6 +10,6 @@ class GenreRepository(BaseRepository):
 
     def get_genre_game_count_report(self):
         report_data = Genre.objects.annotate(
-            game_count=Count('gamegenre_set')
+            game_count=Count('gamegenre')
         ).values('name', 'game_count')
         return list(report_data)
