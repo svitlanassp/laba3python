@@ -9,6 +9,9 @@ urlpatterns = [
     # path('native/create/', views_native.native_create, name='native_create'),
     #
     # # Частина Б (api client)
-    # path('api-client/', views_api.api_list, name='api_list'),
-    # path('api-client/create/', views_api.api_create, name='api_create'),
+    path('games/', views_api.api_list_games, name='api_list_games'),
+    path('games/delete/<int:pk>/', views_api.api_delete_game, name='api_delete_game'),
+
+    path('developers/', views_api.api_list_developers, name='api_list_developers'),
+    path('developers/delete/<int:pk>/', views_api.api_delete_developer, name='api_delete_developer'),
 ]
