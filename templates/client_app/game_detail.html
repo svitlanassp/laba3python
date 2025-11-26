@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ game.title }}</title>
+</head>
+<body>
+    <h1>{{ game.title }}</h1>
+
+    <p><strong>Жанр:</strong> {{ game.genre }}</p>
+    <p><strong>Розробник:</strong> {{ game.developer }}</p>
+    <p><strong>Опис:</strong> {{ game.description }}</p>
+    <p><strong>Ціна:</strong> {{ game.price }} грн</p>
+
+    <br>
+
+    <a href="{% url 'native_edit' pk=game.pk %}">✏️ Редагувати</a>
+
+    |
+
+    <a href="{% url 'native_list' %}">🔙 До списку</a>
+
+    <hr>
+
+    <div style="border: 1px solid red; padding: 10px; width: fit-content;">
+        <p style="margin-top: 0;">Видалити цю гру?</p>
+        <form action="{% url 'native_delete' pk=game.pk %}" method="post">
+            {% csrf_token %}
+            <button type="submit" style="color: red;">🗑 Видалити</button>
+        </form>
+    </div>
+
+</body>
+</html>
