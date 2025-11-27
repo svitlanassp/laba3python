@@ -1,29 +1,38 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <title>Список ігор</title>
+    <link rel="stylesheet" href="{% static 'client_app/style.css' %}">
 </head>
 <body>
-    <h1>Бібліотека ігор</h1>
+    <div class="container">
+        <h1>🎮 Бібліотека ігор</h1>
 
-    <p>
-        <a href="{% url 'native_create' %}">➕ Додати нову гру</a>
-    </p>
+        <div style="text-align: right; margin-bottom: 20px;">
+            <a href="{% url 'native_create' %}" class="btn btn-primary">➕ Додати гру</a>
+        </div>
 
-    <hr>
-
-    <ul>
-        {% for game in games %}
-            <li>
-                <a href="{% url 'native_detail' pk=game.pk %}">
-                    <strong>{{ game.title }}</strong>
-                </a>
-                — {{ game.price }} грн
-            </li>
-        {% empty %}
-            <li>Ігор поки немає. Додайте першу!</li>
-        {% endfor %}
-    </ul>
+        <ul class="game-list">
+            {% for game in games %}
+                <li class="game-card">
+                    <div>
+                        <a href="{% url 'native_detail' pk=game.pk %}" class="game-title">
+                            {{ game.title }}
+                        </a>
+                        <div style="color: #666; font-size: 0.9em;">
+                            {{ game.developer }}
+                        </div>
+                    </div>
+                    <div class="game-price">
+                        {{ game.price }} грн
+                    </div>
+                </li>
+            {% empty %}
+                <p style="text-align: center; color: #7f8c8d;">Ігор поки немає. Додайте першу!</p>
+            {% endfor %}
+        </ul>
+    </div>
 </body>
 </html>
