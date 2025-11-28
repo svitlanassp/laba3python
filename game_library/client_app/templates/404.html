@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Помилка 404 - Гру не знайдено</title>
+    <link rel="stylesheet" href="{% static 'client_app/style.css' %}">
+</head>
+<body>
+    <div class="container error-container">
+        <h2>Помилка 404 - Гру не знайдено</h2>
+        <a href="{% url 'native_list' %}" class="btn btn-primary">
+            🎮 Повернутися до бібліотеки
+        </a>
+    </div>
+</body>
+</html>

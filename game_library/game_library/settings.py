@@ -80,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'steam_library',
         'USER': 'root',
-        'PASSWORD': 'Ljvjdjq2007',
+        'PASSWORD': 'At14122005',
         'HOST': '127.0.0.1',
         'PORT': '3306',
     }
@@ -127,3 +127,15 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+# 1. Якщо користувач не залогінений і стукає на закриту сторінку -> кидаємо на логін
+LOGIN_URL = 'login'
+
+# 2. Куди йти після успішного входу -> на список ігор
+LOGIN_REDIRECT_URL = 'native_list'
+
+# 3. Куди йти після натискання кнопки "Вийти" -> назад на логін
+LOGOUT_REDIRECT_URL = 'login'

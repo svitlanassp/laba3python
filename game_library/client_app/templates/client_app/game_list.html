@@ -3,14 +3,105 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Список ігор</title>
+    <title>Бібліотека ігор</title>
     <link rel="stylesheet" href="{% static 'client_app/style.css' %}">
 </head>
 <body>
     <div class="container">
-        <h1>🎮 Бібліотека ігор</h1>
 
-        <div style="text-align: right; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px;">
+
+            <div style="font-size: 1.5rem; font-weight: 900;">
+               🎮 GameLib
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 15px;">
+
+                <div class="balance-trigger" onclick="openModal()" title="Натисніть, щоб поповнити">
+                    💰 {{ user.library.balance|default:"0.00" }} $
+                    <span style="font-size: 0.8em; opacity: 0.7;">(+)</span>
+                </div>
+
+                <a href="{% url 'native_library' %}" class="btn btn-secondary" style="font-size: 0.9rem; padding: 8px 15px;">
+                    📚 Мої ігри
+                </a>
+
+                <div style="border-left: 1px solid #ccc; padding-left: 15px; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #636e72;">
+                        <strong>{{ user.username }}</strong>
+                    </span>
+                    <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn" style="color: #95a5a6; background: none; padding: 0; text-decoration: underline;">
+                            Вийти
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-panel">
+            <form method="get" action="{% url 'native_list' %}">
+
+                <div class="search-row">
+                    <input type="text" name="q" placeholder="🔍 Введіть назву гри..." value="{{ request.GET.q }}" class="search-input">
+
+                    <button type="submit" class="btn btn-primary">Знайти</button>
+
+                    {% if request.GET.q or request.GET.developer or request.GET.publisher or request.GET.genre %}
+                        <a href="{% url 'native_list' %}" class="btn btn-secondary">Скинути</a>
+                    {% endif %}
+                </div>
+
+                <div class="filters-row">
+
+                    <select name="developer" class="filter-select">
+                        <option value="">-- Всі розробники --</option>
+                        {% for dev in developers %}
+                            <option value="{{ dev.pk }}" {% if request.GET.developer == dev.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ dev.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="publisher" class="filter-select">
+                        <option value="">-- Всі видавці --</option>
+                        {% for pub in publishers %}
+                            <option value="{{ pub.pk }}" {% if request.GET.publisher == pub.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ pub.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="genre" class="filter-select">
+                        <option value="">-- Всі жанри --</option>
+                        {% for g in genres %}
+                            <option value="{{ g.pk }}" {% if request.GET.genre == g.pk|stringformat:"s" %}selected{% endif %}>
+                                {{ g.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </form>
+        </div>
+
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <span>
+                            {% if message.tags == 'error' %}⛔{% elif message.tags == 'success' %}✅{% else %}⚠️{% endif %}
+                            {{ message }}
+                        </span>
+                        <span style="cursor: pointer; opacity: 0.6;" onclick="this.parentElement.style.display='none';">&times;</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="margin: 0; border: none;">Магазин</h1>
             <a href="{% url 'native_create' %}" class="btn btn-primary">➕ Додати гру</a>
         </div>
 
@@ -18,22 +109,72 @@
             {% for game in games %}
                 <li class="game-card">
                     <div>
-                        <a href="{% url 'native_detail' pk=game.pk %}" class="game-title">
-                            {{ game.title }}
-                        </a>
-                        <div style="color: #666; font-size: 0.9em;">
-                            {{ game.developer }}
+                        <a href="{% url 'native_detail' pk=game.pk %}" class="game-title">{{ game.title }}</a>
+                        <div style="color: #7f8c8d; font-size: 0.9em; margin-bottom: 8px;">
+                            {{ game.developer|default:"Невідомий розробник" }}
+                        </div>
+                        <div style="font-size: 0.85em; color: #3498db">
+                            {% for genre in game.genre.all|slice:":3" %}
+                                #{{ genre.name }}
+                            {% endfor %}
                         </div>
                     </div>
-                    <div class="game-price">
-                        {{ game.price }} $
+                    <div class="game-price" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <span>{{ game.price }} $</span>
+
+                        {% if game in user.library.games.all %}
+                            <span style="color: #27ae60; font-weight: bold; font-size: 0.9rem;">✔ Придбано</span>
+                        {% else %}
+                            <a href="{% url 'buy_game' pk=game.pk %}" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.8rem;">
+                                Купити
+                            </a>
+                        {% endif %}
                     </div>
                 </li>
             {% empty %}
-                <p style="text-align: center; color: #7f8c8d;">Ігор поки немає. Додайте першу!</p>
+                <p>Ігор немає.</p>
             {% endfor %}
         </ul>
     </div>
-</body>
 
+    <div id="moneyModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Поповнення</h2>
+
+            <form action="{% url 'add_balance' %}" method="post">
+                {% csrf_token %}
+                <label style="text-align: left;">Введіть суму:</label>
+                <input type="number" name="amount" placeholder="100.00" required style="margin-bottom: 20px; font-size: 1.2rem; text-align: center;">
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem;">
+                    💳 Поповнити рахунок
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Знаходимо вікно
+        var modal = document.getElementById("moneyModal");
+
+        // Функція відкриття
+        function openModal() {
+            modal.style.display = "block";
+        }
+
+        // Функція закриття
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        // Закрити, якщо клікнули повз вікно (на темний фон)
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
 </html>

@@ -52,6 +52,12 @@ a:hover {
     text-decoration: none;
 }
 
+.btn:hover {
+    background-color: #7f8c8d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3);
+}
+
 .btn-primary {
     background-color: #3498db;
     color: white !important;
@@ -185,4 +191,157 @@ input:focus, textarea:focus, select:focus {
     border-radius: 8px;
     background-color: #fff5f5;
 
+}
+
+/* --- МОДАЛЬНЕ ВІКНО (POPUP) --- */
+
+/* Затемнений фон */
+.modal-overlay {
+    display: none; /* Сховано за замовчуванням */
+    position: fixed;
+    z-index: 1000; /* Щоб було поверх усього */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Напівпрозорий чорний */
+    backdrop-filter: blur(2px); /* Легке розмиття фону */
+}
+
+/* Саме біле віконце */
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto; /* Відступ зверху і центрування */
+    padding: 30px;
+    border-radius: 12px;
+    width: 300px; /* Ширина вікна */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    text-align: center;
+    position: relative;
+    animation: fadeIn 0.3s;
+}
+
+/* Анімація появи */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* Хрестик закриття */
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+}
+
+.close-btn:hover {
+    color: #e74c3c;
+}
+
+/* Стиль балансу як кнопки */
+.balance-trigger {
+    background: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid #3498db;
+    color: #3498db;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.balance-trigger:hover {
+    background: #3498db;
+    color: white;
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* --- ПОВІДОМЛЕННЯ (ALERTS) --- */
+.messages-container {
+    margin-bottom: 20px;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 5px solid #28a745;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 5px solid #dc3545;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border-left: 5px solid #ffc107;
+}
+
+/* --- ПАНЕЛЬ ФІЛЬТРІВ --- */
+.filter-panel {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e1e4e8;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.search-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.filter-select:hover {
+    border-color: #3498db;
 }

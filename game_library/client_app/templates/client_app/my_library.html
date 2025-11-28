@@ -1,0 +1,54 @@
+{% extends 'client_app/base.html' %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'native_list' %}" style="display: inline-block; margin-bottom: 20px;">
+        &larr; Назад до магазину
+    </a>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1>📚 Моя бібліотека</h1>
+        <div style="font-weight: bold; color: #27ae60;">
+            Ваш баланс: {{ user.library.balance }} $
+        </div>
+    </div>
+
+    <ul class="game-list">
+        {% for game in games %}
+            <li class="game-card">
+
+                <div style="margin-bottom: 15px;">
+                    <strong class="game-title" style="font-size: 1.3rem;">{{ game.title }}</strong>
+                    <div style="color: #7f8c8d; font-size: 0.9em;">
+                        {{ game.developer|default:"Розробник" }}
+                    </div>
+                    <div style="margin-top: 5px; font-size: 0.85em; color: #95a5a6;">
+                        Куплено за: {{ game.price }} $
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+
+                    <button class="btn btn-primary">
+                        ▶ Грати
+                    </button>
+
+                    <form action="{% url 'return_game' pk=game.pk %}" method="post" onsubmit="return confirm('Ви точно хочете повернути цю гру? Гроші повернуться на баланс.');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary" title="Повернути гру і отримати гроші назад">
+                            ↩ Повернути
+                        </button>
+                    </form>
+
+                </div>
+            </li>
+        {% empty %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #bdc3c7;">
+                <h2>Тут порожньо 🕸️</h2>
+                <p>Ви ще не купили жодної гри.</p>
+                <a href="{% url 'native_list' %}" class="btn btn-primary" style="margin-top: 10px;">Перейти до магазину</a>
+            </div>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

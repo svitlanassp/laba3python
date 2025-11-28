@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User as AuthUser
 
 class User(models.Model):
     user_id = models.AutoField(primary_key=True)
@@ -63,8 +64,9 @@ class Game(models.Model):
 
 class Library(models.Model):
     library_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, related_name='library')
     games = models.ManyToManyField(Game, through='LibraryGame')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"{self.user.username}'s library"
