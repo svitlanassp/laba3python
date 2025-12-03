@@ -1,3 +1,7 @@
+from decimal import Decimal
+
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -58,6 +62,109 @@ class UserViewSet(BaseViewSet):
     repo = repo_manager.users
     serializer_class = UserSerializer
 
+    @action(detail=True, methods=['get'])
+    def data(self, request, pk=None):
+        # Оскільки pk - це primary key (id), знаходимо користувача
+        try:
+            user = self.repo.get_by_id(pk)
+        except Exception:
+            return Response({'error': 'Некоректний ідентифікатор користувача.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response({
+            'user_id': user.pk,
+            'username': user.username,
+            'balance': user.balance
+        })
+
+    @action(detail=True, methods=['post'])
+    def top_up(self, request, pk=None):
+        amount = request.data.get('amount')
+
+        try:
+            amount = Decimal(amount)
+            if amount <= 0:
+                return Response({'error': 'Сума поповнення повинна бути позитивною.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        except (TypeError, ValueError):
+            return Response({'error': 'Некоректна сума.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user = self.repo.get_by_id(pk)
+        if not user:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            with transaction.atomic():
+                new_balance = user.balance + amount
+
+                updated_user = self.repo.update(user.pk, balance=new_balance)
+
+                return Response({
+                    'message': f'Баланс успішно поповнено на {amount} $',
+                    'new_balance': updated_user.balance
+                }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': f'Помилка поповнення: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class GameViewSet(BaseViewSet):
+    repo = repo_manager.games
+    serializer_class = GameSerializer
+
+    @action(detail=False, methods=['post'], url_path='buy')
+    def buy_game(self, request):
+        user_id = request.data.get('user_id')
+        game_id = request.data.get('game_id')
+
+        try:
+            user = repo_manager.users.get_by_id(user_id)
+            game = repo_manager.games.get_by_id(game_id)
+        except Exception:
+            return Response({'error': 'Некоректний формат ID.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user or not game:
+            return Response({'error': 'Користувача або гру не знайдено.'}, status=status.HTTP_404_NOT_FOUND)
+
+        library = repo_manager.libraries.get_by_user(user)
+        if library:
+            if repo_manager.library_games.is_game_in_library(library.pk, game.pk):
+                return Response({'error': f'Гра "{game.title}" вже є у вашій бібліотеці.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        if user.balance < game.price:
+            return Response({'error': 'Недостатньо коштів на балансі.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                user.balance -= game.price
+                repo_manager.users.update(user.pk, balance=user.balance)
+
+                order_obj = repo_manager.orders.create(user=user, total_amount=game.price, status='Completed')
+                repo_manager.order_games.create(order=order_obj, game=game, price_at_purchase=game.price)
+
+                if not library:
+                    library = repo_manager.libraries.create(user=user)
+
+                repo_manager.library_games.create(
+                    library=library,
+                    game=game,
+                    purchase_date=timezone.now()
+                )
+
+            return Response({
+                'message': f'Гра "{game.title}" успішно куплена!',
+                'new_balance': user.balance
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': f'Помилка транзакції: {type(e).__name__}: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class OrderViewSet(BaseViewSet):
     repo = repo_manager.orders
     serializer_class = OrderSerializer
@@ -72,6 +179,25 @@ class LibraryViewSet(BaseViewSet):
     repo = repo_manager.libraries
     serializer_class = LibrarySerializer
 
+    def list(self, request):
+        user_id = request.query_params.get('user')
+
+        if user_id:
+            try:
+                library = self.repo.get_by_user(user_id)
+
+                if library:
+                    serializer = self.serializer_class(library)
+                    return Response([serializer.data])
+                else:
+                    return Response([])
+
+            except Exception as e:
+                return Response({'error': f'Некоректний ID користувача для фільтрації: {e}'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        return super().list(request)
+
 class LibraryGameViewSet(BaseViewSet):
     repo = repo_manager.library_games
     serializer_class = LibraryGameSerializer
@@ -84,11 +210,6 @@ class LibraryGameViewSet(BaseViewSet):
 class OrderGameViewSet(BaseViewSet):
     repo = repo_manager.order_games
     serializer_class = OrderGameSerializer
-
-
-class GameViewSet(BaseViewSet):
-    repo = repo_manager.games
-    serializer_class = GameSerializer
 
 
 class DeveloperViewSet(BaseViewSet):

@@ -34,7 +34,6 @@
                     <form action="{% url 'api_delete_developer' developer.developer_id %}" method="post" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="delete-btn">Delete</button> </form>
-                    </form>
                 </td>
             </tr>
         {% endfor %}
@@ -44,6 +43,7 @@
     <p style="color: red;">❌ Failed to retrieve data or developer list is empty.</p>
     {% endif %}
 
+    <hr style="margin-top: 30px;">
     <p><a href="{% url 'api_list_games' %}">Back to the games list</a></p>
 
 </body>

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-%9w9-y2#+ws*@rdgvhe(dr^+&yk$(ys*_l)42&y8se7p^sgbo1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -78,13 +78,15 @@ WSGI_APPLICATION = 'game_library.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'steam_library',
+        'NAME': 'steam_lib',
         'USER': 'root',
         'PASSWORD': 'Ljvjdjq2007',
         'HOST': '127.0.0.1',
         'PORT': '3306',
     }
 }
+
+AUTH_USER_MODEL = 'library_app.User'
 
 
 # Password validation
@@ -127,3 +129,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+LOGIN_URL = 'login'
+
+LOGIN_REDIRECT_URL = 'native_list'
+
+LOGOUT_REDIRECT_URL = 'login'

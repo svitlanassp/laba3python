@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .NetworkHelper import NetworkHelper
 
 API_BASE_URL = 'http://127.0.0.1:8000/api/'
-API_USER = 'sveta'
+API_USER = 'arisu'
 API_PASS = 'paowithbeijo'
 
 api_client = NetworkHelper(API_BASE_URL, API_USER, API_PASS)

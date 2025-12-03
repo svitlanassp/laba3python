@@ -18,3 +18,9 @@ class LibraryGameRepository(BaseRepository):
             )
             .order_by('-library_count','game__title')
         )
+
+    def is_game_in_library(self, library_id, game_id):
+        return self.model.objects.filter(
+            library_id=library_id,
+            game_id=game_id
+        ).exists()

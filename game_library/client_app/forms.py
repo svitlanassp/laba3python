@@ -9,6 +9,6 @@ class GameForm(forms.ModelForm):
 
         widgets = {
             'release_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'genre': forms.CheckboxSelectMultiple(), 
+            'genre': forms.CheckboxSelectMultiple(),
+            'price': forms.NumberInput(attrs={'min': '0', 'step': '0.1'}),
         }
-

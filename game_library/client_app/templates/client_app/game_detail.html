@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="{% url 'native_list' %}" style="display: inline-block; margin-bottom: 10px;">&larr; Назад до списку</a>
+                <a href="{% url 'game_list' %}" style="display: inline-block; margin-bottom: 10px;">&larr; Назад до списку</a>
 
         <h1>{{ game.title }}</h1>
 
@@ -43,17 +43,16 @@
             </div>
         </div>
 
-        <a href="{% url 'native_edit' pk=game.pk %}" class="btn btn-secondary">✏️ Редагувати</a>
+                <a href="{% url 'game_edit' pk=game.pk %}" class="btn btn-secondary">✏️ Редагувати</a>
 
         <div class="delete-section">
             <h3 style="color: #c0392b; margin-top: 0;">Видалення гри</h3>
             <p style="font-size: 0.9rem; color: #555;">Цю дію неможливо скасувати. Гра буде видалена з бази даних.</p>
-            <form action="{% url 'native_delete' pk=game.pk %}" method="post">
+                        <form action="{% url 'game_delete' pk=game.pk %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger">🗑 Видалити гру</button>
             </form>
         </div>
     </div>
 </body>
-
 </html>

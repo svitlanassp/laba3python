@@ -1,11 +1,14 @@
+from django.core.validators import MinValueValidator
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-class User(models.Model):
-    user_id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=100)
-    date_joined = models.DateTimeField(auto_now_add=True)
+class User(AbstractUser):
+    balance = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        validators=[MinValueValidator(0.00, message='Баланс не може бути від’ємним.')]
+    )
 
     def __str__(self):
         return self.username

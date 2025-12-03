@@ -4,8 +4,27 @@ from .models import User, Order, Library, LibraryGame, OrderGame, Game, Develope
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['user_id', 'username', 'email','date_joined','password']
+        fields = ['id', 'username', 'email','date_joined','password','balance']
         read_only_fields = ['date_joined']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if password:
+            instance.set_password(password)
+
+        instance.save()
+        return instance
 
 class OrderSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username',read_only=True)
@@ -15,21 +34,6 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ['order_id','user','username','total_amount','status','created_at']
         read_only_fields = ['created_at']
 
-class LibrarySerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username',read_only=True)
-
-    class Meta:
-        model = Library
-        fields = ['library_id','user','username']
-
-class LibraryGameSerializer(serializers.ModelSerializer):
-    game_title = serializers.CharField(source='game.title',read_only=True)
-    library_user = serializers.CharField(source='library.user.username',read_only=True)
-
-    class Meta:
-        model = LibraryGame
-        fields = ['id','library','game','game_title','library_user','playtime_hours','purchase_date','is_installed','last_played']
-        read_only_fields = ['purchase_date','last_played']
 
 class OrderGameSerializer(serializers.ModelSerializer):
     game_title = serializers.CharField(source='game.title',read_only=True)
@@ -93,3 +97,21 @@ class GameSerializer(serializers.ModelSerializer):
             'developer_id', 'publisher_id', 'genre_id'
         ]
 
+
+class LibraryGameSerializer(serializers.ModelSerializer):
+    game_title = serializers.CharField(source='game.title',read_only=True)
+    library_user = serializers.CharField(source='library.user.username',read_only=True)
+    game_data = GameSerializer(source='game', read_only=True)
+
+    class Meta:
+        model = LibraryGame
+        fields = ['id','library','game','game_title','library_user','playtime_hours','purchase_date','is_installed','last_played', 'game_data'] # ⬅️ ДОДАНО game_data
+        read_only_fields = ['purchase_date','last_played']
+
+class LibrarySerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    library_games = LibraryGameSerializer(many=True, source='librarygame_set', read_only=True)
+
+    class Meta:
+        model = Library
+        fields = ['library_id', 'user', 'username', 'library_games']
