@@ -141,7 +141,7 @@ def add_balance(request):
             new_balance = user.balance + amount
             repo_manager.users.update_balance(user.pk, new_balance)
 
-            messages.success(request, f"Баланс поповнено на {amount} грн!")
+            messages.success(request, f"Баланс поповнено на {amount} $!")
         else:
             messages.error(request, "Сума має бути більшою за нуль")
 
@@ -208,7 +208,7 @@ def return_game(request, pk):
 
             repo_manager.library_games.delete(lib_game_entry.pk)
 
-            messages.success(request, f"Гру '{game.title}' успішно повернуто! {game.price} грн зараховано на баланс.")
+            messages.success(request, f"Гру '{game.title}' успішно повернуто! {game.price} $ зараховано на баланс.")
         else:
             messages.error(request, "Цієї гри немає у вашій бібліотеці.")
 
