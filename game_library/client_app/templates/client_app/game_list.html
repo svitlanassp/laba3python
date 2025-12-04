@@ -1,28 +1,25 @@
+{% extends 'client_app/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title>Бібліотека ігор</title>
-    <link rel="stylesheet" href="{% static 'client_app/style.css' %}">
-</head>
-<body>
+
+{% block title %}Магазин ігор{% endblock %}
+
+{% block content %}
     <div class="container">
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px;">
 
-            <div style="font-size: 1.5rem; font-weight: 900;">
+            <div style="font-size: 1.5rem; font-weight: 900; color: #2c3e50;">
                🎮 GameLib
             </div>
 
             <div style="display: flex; align-items: center; gap: 15px;">
 
-                                <div class="balance-trigger" onclick="openModal()" title="Натисніть, щоб поповнити">
-                    💰 {{ balance|default:"0.00" }} $
+                <div class="balance-trigger" onclick="openModal()" title="Натисніть, щоб поповнити">
+                    💰 {{ user.library.balance|default:"0.00" }} $
                     <span style="font-size: 0.8em; opacity: 0.7;">(+)</span>
                 </div>
 
-                                <a href="{% url 'library' %}" class="btn btn-secondary" style="font-size: 0.9rem; padding: 8px 15px;">
+                <a href="{% url 'library' %}" class="btn btn-secondary" style="font-size: 0.9rem; padding: 8px 15px;">
                     📚 Мої ігри
                 </a>
 
@@ -41,7 +38,7 @@
         </div>
 
         <div class="filter-panel">
-                        <form method="get" action="{% url 'game_list' %}">
+            <form method="get" action="{% url 'game_list' %}">
 
                 <div class="search-row">
                     <input type="text" name="q" placeholder="🔍 Введіть назву гри..." value="{{ request.GET.q }}" class="search-input">
@@ -49,12 +46,12 @@
                     <button type="submit" class="btn btn-primary">Знайти</button>
 
                     {% if request.GET.q or request.GET.developer or request.GET.publisher or request.GET.genre %}
-                                                <a href="{% url 'game_list' %}" class="btn btn-secondary">Скинути</a>
+                        <a href="{% url 'game_list' %}" class="btn btn-secondary">Скинути</a>
                     {% endif %}
                 </div>
 
                 <div class="filters-row">
-                                        <select name="developer" class="filter-select">
+                    <select name="developer" class="filter-select">
                         <option value="">-- Всі розробники --</option>
                         {% for dev in developers %}
                             <option value="{{ dev.pk }}" {% if request.GET.developer == dev.pk|stringformat:"s" %}selected{% endif %}>
@@ -85,7 +82,7 @@
             </form>
         </div>
 
-                {% if messages %}
+        {% if messages %}
             <div class="messages-container">
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }}">
@@ -101,14 +98,14 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h1 style="margin: 0; border: none;">Магазин</h1>
-                        <a href="{% url 'game_create' %}" class="btn btn-primary">➕ Додати гру</a>
+            <a href="{% url 'game_create' %}" class="btn btn-primary">➕ Додати гру</a>
         </div>
 
         <ul class="game-list">
             {% for game in games %}
                 <li class="game-card">
                     <div>
-                                                <a href="{% url 'game_detail' pk=game.pk %}" class="game-title">{{ game.title }}</a>
+                        <a href="{% url 'game_detail' pk=game.pk %}" class="game-title">{{ game.title }}</a>
                         <div style="color: #7f8c8d; font-size: 0.9em; margin-bottom: 8px;">
                             {{ game.developer|default:"Невідомий розробник" }}
                         </div>
@@ -118,13 +115,20 @@
                             {% endfor %}
                         </div>
                     </div>
+
                     <div class="game-price" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                         <span>{{ game.price }} $</span>
 
                         {% if game in user.library.games.all %}
                             <span style="color: #27ae60; font-weight: bold; font-size: 0.9rem;">✔ Придбано</span>
+
+                        {% elif user.library.balance < game.price %}
+                            <button class="btn" style="background-color: #bdc3c7; cursor: not-allowed; font-size: 0.8rem; padding: 5px 15px;" disabled title="Не вистачає коштів">
+                                Ще {{ game.price|add:"-"|add:user.library.balance }} $
+                            </button>
+
                         {% else %}
-                                                        <a href="{% url 'buy_game' pk=game.pk %}" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.8rem;">
+                            <a href="{% url 'buy_game' pk=game.pk %}" class="btn btn-primary" style="padding: 5px 15px; font-size: 0.8rem;">
                                 Купити
                             </a>
                         {% endif %}
@@ -142,7 +146,7 @@
 
             <h2 style="margin-bottom: 20px; color: #2c3e50;">Поповнення</h2>
 
-                        <form action="{% url 'top_up' %}" method="post">
+            <form action="{% url 'top_up' %}" method="post">
                 {% csrf_token %}
                 <label style="text-align: left;">Введіть суму:</label>
                 <input type="number" name="amount" placeholder="100.00" required style="margin-bottom: 20px; font-size: 1.2rem; text-align: center;">
@@ -154,7 +158,7 @@
         </div>
     </div>
 
-        <script>
+    <script>
         var modal = document.getElementById("moneyModal");
         function openModal() {
             modal.style.display = "block";
@@ -168,5 +172,5 @@
             }
         }
     </script>
-</body>
-</html>
+
+{% endblock %}

@@ -1,36 +1,52 @@
+{% extends 'client_app/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title>Форма гри</title>
-    <link rel="stylesheet" href="{% static 'client_app/style.css' %}">
-</head>
-<body>
-    <div class="container">
-        <h1>{% if form.instance.pk %}Редагувати гру{% else %}Додати нову гру{% endif %}</h1>
+
+{% block title %}
+    {% if form.instance.pk %}Редагувати гру{% else %}Додати нову гру{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="container" style="max-width: 600px;"> <h1 style="margin-top: 0;">
+            {% if form.instance.pk %}
+                ✏️ Редагувати гру
+            {% else %}
+                ➕ Додати нову гру
+            {% endif %}
+        </h1>
 
         <form method="post">
             {% csrf_token %}
 
             {% for field in form %}
-                <p>
-                    {{ field.label_tag }}
+                <div style="margin-bottom: 20px;">
+
+                    <label for="{{ field.id_for_label }}" style="display: block; font-weight: bold; margin-bottom: 5px; color: #2c3e50;">
+                        {{ field.label }}
+                    </label>
+
                     {{ field }}
+
                     {% if field.help_text %}
-                        <span class="helptext">{{ field.help_text }}</span>
+                        <p class="helptext">{{ field.help_text }}</p>
                     {% endif %}
+
                     {% for error in field.errors %}
-                        <span style="color: red; font-size: 0.8rem;">{{ error }}</span>
+                        <div style="color: #e74c3c; font-size: 0.9rem; margin-top: 5px;">
+                            ⛔ {{ error }}
+                        </div>
                     {% endfor %}
-                </p>
+                </div>
             {% endfor %}
 
-            <div style="margin-top: 30px;">
-                <button type="submit" class="btn btn-primary">💾 Зберегти</button>
-                                <a href="{% url 'game_list' %}" class="btn" style="color: #7f8c8d; margin-left: 10px;">Скасувати</a>
+            <div style="margin-top: 30px; display: flex; align-items: center; gap: 15px;">
+                <button type="submit" class="btn btn-primary" style="font-size: 1rem; padding: 10px 30px;">
+                    💾 Зберегти
+                </button>
+
+                <a href="{% url 'game_list' %}" class="btn btn-secondary">
+                    Скасувати
+                </a>
             </div>
         </form>
     </div>
-</body>
-</html>
+{% endblock %}
