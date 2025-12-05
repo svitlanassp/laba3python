@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ game.title }}{% endblock %}
+
+{% block content %}
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="flex-grow: 1; margin-right: 40px;">
+            <h1 style="border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">{{ game.title }}</h1>
+
+            <p><strong>Розробник:</strong> {{ game.developer_name|default:"Невідомий" }}</p>
+            <p><strong>Видавець:</strong> {{ game.publisher_name|default:"Невідомий" }}</p>
+            <p><strong>Дата випуску:</strong> {{ game.release_date }}</p>
+
+            <p style="margin-top: 20px;">
+                <strong>Жанри:</strong>
+                {% for genre in game.genre_names %}
+                    <span style="display: inline-block; background-color: #e6e9ed; padding: 5px 10px; border-radius: 4px; margin-right: 5px; font-size: 0.9em;">{{ genre }}</span>
+                {% endfor %}
+            </p>
+
+            <h3 style="margin-top: 30px;">Опис</h3>
+            <p>{{ game.description|default:"Опис відсутній." }}</p>
+        </div>
+
+        <div style="width: 300px; padding: 25px; background-color: #f7f9fb; border: 1px solid #e0e0e0; border-radius: 8px; text-align: center;">
+
+            <div style="font-size: 2.5rem; font-weight: 700; color: #2ecc71; margin-bottom: 20px;">
+                {{ game.price }} $
+            </div>
+
+            {% if is_owned %}
+                <a href="{% url 'library' %}" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 12px 0; background-color: #27ae60;">
+                    ▶ ГРАТИ
+                </a>
+            {% else %}
+                <form method="post" action="{% url 'buy_game' pk=game.game_id %}">
+                    {% csrf_token %}
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 12px 0;">
+                        КУПИТИ ЗАРАЗ
+                    </button>
+                </form>
+            {% endif %}
+            <hr style="margin: 20px 0; border: 0; border-top: 1px dashed #cfd8dc;">
+
+            <p style="font-size: 0.9em; color: #7f8c8d;">
+                Ваш поточний баланс: <strong>{{ balance|default:"N/A" }} $</strong>
+            </p>
+
+            </div>
+    </div>
+
+{% endblock %}
