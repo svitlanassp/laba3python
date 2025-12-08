@@ -12,7 +12,8 @@ from .serializers import (
     GameSerializer, DeveloperSerializer,
     PublisherSerializer, GenreSerializer, GameGenreSerializer,
     UserSerializer, LibrarySerializer, OrderSerializer,
-    LibraryGameSerializer, OrderGameSerializer
+    LibraryGameSerializer, OrderGameSerializer, ReviewSerializer, PriceQualityReportSerializer,
+    GenrePlaytimeReportSerializer, MonthlyRevenueReportSerializer
 )
 
 repo_manager = RepositoryManager()
@@ -114,6 +115,21 @@ class GameViewSet(BaseViewSet):
     repo = repo_manager.games
     serializer_class = GameSerializer
 
+    def list(self, request):
+        items = self.repo.get_all()
+
+        user_owned_game_ids = set()
+
+        if request.user.is_authenticated:
+            user_owned_game_ids = repo_manager.library_games.get_owned_game_ids_by_user(request.user.id)
+
+        serializer = self.serializer_class(
+            items,
+            many=True,
+            context={'user_owned_game_ids': user_owned_game_ids}
+        )
+        return Response(serializer.data)
+
     @action(detail=True, methods=['get'])
     def is_owned(self, request, pk=None):
         user_id_str = request.query_params.get('user_id')
@@ -163,7 +179,7 @@ class GameViewSet(BaseViewSet):
                 user.balance -= game.price
                 repo_manager.users.update(user.pk, balance=user.balance)
 
-                order_obj = repo_manager.orders.create(user=user, total_amount=game.price, status='Completed')
+                order_obj = repo_manager.orders.create(user=user, total_amount=game.price, status='complete')
                 repo_manager.order_games.create(order=order_obj, game=game, price_at_purchase=game.price)
 
                 if not library:
@@ -193,6 +209,16 @@ class OrderViewSet(BaseViewSet):
     def report(self,request):
         report_data = self.repo.get_user_spending_report()
         return Response(list(report_data))
+
+    @action(detail=False, methods=['get'], url_path='monthly-revenue')
+    def monthly_revenue_report(self,request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        report_data = self.repo.get_monthly_revenue_report(start_date_str=start_date,end_date_str=end_date)
+
+        serializer = MonthlyRevenueReportSerializer(report_data,many=True)
+        return Response(serializer.data)
 
 
 class LibraryViewSet(BaseViewSet):
@@ -244,6 +270,13 @@ class GenreViewSet(BaseViewSet):
     repo = repo_manager.genres
     serializer_class = GenreSerializer
 
+    @action(detail=False, methods=['get'], url_path='playtime-ranking')
+    def playtime_ranking(self, request):
+        min_games = request.query_params.get('min_games',5)
+        report_data = self.repo.get_top_genres_by_playtime(min_games_count=int(min_games))
+        serializer = GenrePlaytimeReportSerializer(report_data,many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def count(self, request):
         report_data = self.repo.get_genre_game_count_report()
@@ -253,3 +286,30 @@ class GenreViewSet(BaseViewSet):
 class GameGenreViewSet(BaseViewSet):
     repo = repo_manager.game_genres
     serializer_class = GameGenreSerializer
+
+class ReviewViewSet(BaseViewSet):
+    repo = repo_manager.reviews
+    serializer_class = ReviewSerializer
+
+    @action(detail=False, methods=['get'])
+    def by_game(self,request):
+        game_id = request.query_params.get('game_id')
+        if not game_id:
+            return Response({'error'},status=status.HTTP_400_BAD_REQUEST)
+        try:
+            reviews = self.repo.get_reviews_by_game(game_id)
+            serializer = self.serializer_class(reviews,many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({'error': f'Помилка: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='price-quality-ratio')
+    def price_quality_report(self,request):
+        sort_order = request.query_params.get('sort','worst')
+        report_data = self.repo.get_price_quality_ratio_report()
+
+        if sort_order == 'best':
+            report_data = report_data.order_by('price_quality_ratio', '-avg_rating')
+
+        serializer = PriceQualityReportSerializer(report_data, many=True)
+        return Response(serializer.data)

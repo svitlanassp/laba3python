@@ -17,6 +17,7 @@ router.register(r'developers', views.DeveloperViewSet, basename='developer')
 router.register(r'publishers', views.PublisherViewSet, basename='publisher')
 router.register(r'genres', views.GenreViewSet, basename='genre')
 router.register(r'game-genres', views.GameGenreViewSet, basename='gamegenre')
+router.register(r'reviews', views.ReviewViewSet, basename='review')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

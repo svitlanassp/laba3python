@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User, Order, Library, LibraryGame, OrderGame, Game, Developer, Publisher, Genre, GameGenre
+from .models import User, Order, Library, LibraryGame, OrderGame, Game, Developer, Publisher, Genre, GameGenre, Review
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -88,14 +89,21 @@ class GameSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all()
     )
 
+    is_owned = serializers.SerializerMethodField()
+
     class Meta:
         model = Game
         fields = [
             'game_id', 'title', 'description', 'price',
             'release_date',
             'developer_name', 'publisher_name', 'genre_names',
-            'developer_id', 'publisher_id', 'genre_id'
+            'developer_id', 'publisher_id', 'genre_id',
+            'is_owned'
         ]
+
+    def get_is_owned(self, obj):
+        user_owned_game_ids = self.context.get('user_owned_game_ids', set())
+        return obj.game_id in user_owned_game_ids
 
 
 class LibraryGameSerializer(serializers.ModelSerializer):
@@ -115,3 +123,33 @@ class LibrarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Library
         fields = ['library_id', 'user', 'username', 'library_games']
+
+class ReviewSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    game_title = serializers.CharField(source='game.title', read_only=True)
+
+    class Meta:
+        model = Review
+        fields = [
+            'review_id', 'user', 'username',
+            'game', 'game_title', 'rating',
+            'comment', 'created_at'
+        ]
+        read_only_fields = ['created_at']
+
+class PriceQualityReportSerializer(serializers.Serializer):
+    title = serializers.CharField(source='game__title')
+    price = serializers.DecimalField(source='game__price',max_digits=10,decimal_places=2)
+    avg_rating = serializers.FloatField()
+    reviews_count = serializers.IntegerField()
+    ratio = serializers.FloatField(source='price_quality_ratio')
+
+class GenrePlaytimeReportSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    total_playtime = serializers.IntegerField()
+    game_count = serializers.IntegerField()
+
+class MonthlyRevenueReportSerializer(serializers.Serializer):
+    order_year = serializers.IntegerField()
+    order_month = serializers.IntegerField()
+    total_revenue = serializers.DecimalField(max_digits=10,decimal_places=2)

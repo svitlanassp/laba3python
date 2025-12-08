@@ -1,4 +1,5 @@
 from .game_genre_repository import GameGenreRepository
+from .review_repository import ReviewRepository
 from .user_repository import UserRepository
 from .game_repository import GameRepository
 from .library_repository import LibraryRepository
@@ -22,3 +23,4 @@ class RepositoryManager:
         self.publishers = PublisherRepository()
         self.genres = GenreRepository()
         self.game_genres = GameGenreRepository()
+        self.reviews = ReviewRepository()

@@ -24,14 +24,7 @@ def game_list_view(request):
         messages.error(request, 'Не вдалося завантажити список ігор із сервера API.')
         games_with_status = []
     else:
-        games_with_status = []
-        for game in all_games:
-            game_id = game.get('game_id')
-
-            is_owned = network_helper.check_if_owned_by_api(user_id, game_id)
-
-            game['is_owned'] = is_owned
-            games_with_status.append(game)
+        games_with_status = all_games
 
     context = {
         'games': games_with_status,
@@ -49,7 +42,7 @@ def game_detail_view(request, pk):
         messages.error(request, 'Гру не знайдено.')
         return redirect('game_list')
 
-    is_owned = network_helper.check_if_owned_by_api(request.user.pk, pk)
+    is_owned = game_data.get('is_owned', False)
 
     context = {
         'game': game_data,
