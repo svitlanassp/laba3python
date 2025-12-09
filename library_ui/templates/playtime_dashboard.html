@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container" style="padding-top: 20px;">
+    <h1>📊 Аналітика: Час у грі</h1>
+    <p class="text-muted">Аналіз того, які жанри найбільше затягують гравців.</p>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row align-items-center">
+                <div class="col-auto">
+                    <label for="minGames" class="col-form-label">Мінімальна кількість ігор у жанрі:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="number" id="minGames" name="min_unique_games" 
+                           class="form-control" value="{{ current_min }}" min="1">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Оновити графік</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {{ chart|safe }}
+        </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a href="{% url 'game_list' %}" class="btn btn-secondary">&larr; Назад у магазин</a>
+    </div>
+</div>
+{% endblock %}
