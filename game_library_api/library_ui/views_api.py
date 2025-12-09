@@ -7,8 +7,8 @@ from requests.auth import HTTPBasicAuth
 from .NetworkHelper import NetworkHelper
 
 API_BASE_URL = 'http://127.0.0.1:8000/api/'
-AUTH_USER = 'arisu'
-AUTH_PASS = 'paowithbeijo'
+AUTH_USER = 'andriana'
+AUTH_PASS = 'At14122005'
 AUTH = HTTPBasicAuth(AUTH_USER, AUTH_PASS)
 
 network_helper = NetworkHelper(API_BASE_URL,AUTH)
