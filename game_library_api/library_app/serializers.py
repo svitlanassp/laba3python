@@ -145,11 +145,56 @@ class PriceQualityReportSerializer(serializers.Serializer):
     ratio = serializers.FloatField(source='price_quality_ratio')
 
 class GenrePlaytimeReportSerializer(serializers.Serializer):
-    name = serializers.CharField()
-    total_playtime = serializers.IntegerField()
-    game_count = serializers.IntegerField()
+    name = serializers.CharField(read_only=True)
+
+    avg_playtime_per_copy = serializers.FloatField(read_only=True)
+
+    unique_game_count = serializers.IntegerField(read_only=True)
 
 class MonthlyRevenueReportSerializer(serializers.Serializer):
     order_year = serializers.IntegerField()
     order_month = serializers.IntegerField()
     total_revenue = serializers.DecimalField(max_digits=10,decimal_places=2)
+
+class DeveloperRevenueReportSerializer(serializers.Serializer):
+    developer_id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(read_only=True)
+
+    total_revenue = serializers.DecimalField(max_digits=10,decimal_places=2,read_only=True)
+    total_copies_sold = serializers.IntegerField(read_only=True)
+    avg_price = serializers.DecimalField(max_digits=10,decimal_places=2,read_only=True)
+
+class UserActivityReportSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    games_owned = serializers.IntegerField(read_only=True)
+    total_playtime = serializers.IntegerField(read_only=True)
+    avg_playtime_per_game = serializers.FloatField(read_only=True)
+
+class UserSpendingRankSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField(read_only=True)
+    total_spent = serializers.DecimalField(max_digits=10,decimal_places=2,read_only=True)
+    orders_count = serializers.IntegerField(read_only=True)
+
+class WhalesGenreBreakdownSerializer(serializers.Serializer):
+    spent_on_genre = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    genre_name = serializers.CharField()
+
+
+class TopRatedGameSerializer(serializers.Serializer):
+    game_id = serializers.IntegerField()
+    title = serializers.CharField()
+    price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    avg_rating = serializers.FloatField()
+    reviews_count = serializers.IntegerField()
+
+class BasicStatsResultSerializer(serializers.Serializer):
+    metric = serializers.CharField()
+    mean = serializers.FloatField()
+    median = serializers.FloatField()
+    min = serializers.FloatField()
+    max = serializers.FloatField()
+    std_dev = serializers.FloatField()
+    count = serializers.IntegerField()
+

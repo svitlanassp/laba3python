@@ -4,7 +4,7 @@ from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter
 from library_app import views
 from django.contrib.auth import views as auth_views
-from library_ui import views_api# Імпорт для Logout
+from library_ui import views_api
 
 router = DefaultRouter()
 router.register(r'users', views.UserViewSet, basename='user')
@@ -18,6 +18,7 @@ router.register(r'publishers', views.PublisherViewSet, basename='publisher')
 router.register(r'genres', views.GenreViewSet, basename='genre')
 router.register(r'game-genres', views.GameGenreViewSet, basename='gamegenre')
 router.register(r'reviews', views.ReviewViewSet, basename='review')
+router.register(r'analytics', views.AnalyticsViewSet, basename='analytics')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

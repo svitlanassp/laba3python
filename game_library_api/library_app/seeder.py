@@ -95,6 +95,11 @@ def create_games(developers,publishers,genres,big_devs,big_pubs):
     games = []
     game_genres_to_create = []
 
+    try:
+        indie_genre = next(g for g in genres if g.name == "Indie")
+    except StopIteration:
+        indie_genre = None
+
     for i in range(NUM_GAMES):
         is_big_studio_game = random.random() < 0.6
 
@@ -106,7 +111,7 @@ def create_games(developers,publishers,genres,big_devs,big_pubs):
         if developer_choice in big_devs:
             price = round(random.uniform(39.99,69.99),2)
         else:
-            price = round(random.uniform(5.99,39.99),2)
+            price = round(random.uniform(15.99,39.99),2)
 
         if developer_choice in big_devs:
             publisher_choice = random.choice(big_pubs)
@@ -128,6 +133,13 @@ def create_games(developers,publishers,genres,big_devs,big_pubs):
     for game in games:
         num_genres = random.randint(1,3)
         assigned_genres = random.sample(genres, min(num_genres,len(genres)))
+
+        if game.developer in big_devs and indie_genre:
+            assigned_genres = [g for g in assigned_genres if g != indie_genre]
+
+            if not assigned_genres and len(genres) > 1:
+                available_genres = [g for g in genres if g != indie_genre]
+                assigned_genres.append(random.choice(available_genres))
 
         for genre in assigned_genres:
             game_genres_to_create.append(GameGenre(game=game,genre=genre))
@@ -166,15 +178,24 @@ def create_purchases(users,games):
     for order in orders:
         num_games_in_order = random.randint(1,3)
 
-        sorted_games = sorted(games, key=lambda g: g.price, reverse=True)
-        selection_pool = sorted_games[:int(len(sorted_games) * 0.3)]
+        # Вибираємо випадкову кількість ігор з ПОВНОГО списку
+        # Це збалансує вибірку, а не обмежить її лише найдорожчими
+        selection_pool = games  # Використовуємо всі ігри
+
+        # Вибираємо випадкову підмножину (наприклад, 20% ігор) для формування унікального замовлення
+        temp_games = random.sample(selection_pool, min(int(len(selection_pool) * 0.2), len(selection_pool)))
+
+        # Сортуємо тимчасовий пул за ціною, щоб іноді брати дорожчі
+        # АБО просто беремо випадкові ігри
+
+        selected_games = random.sample(temp_games, min(num_games_in_order, len(temp_games)))
 
         if selection_pool:
             selected_games = random.sample(selection_pool, min(num_games_in_order, len(selection_pool)))
         else:
             continue
 
-        order_total = 0
+        order_total = Decimal('0.00')
 
         for game in selected_games:
             original_price = game.price
@@ -196,7 +217,7 @@ def create_purchases(users,games):
             else:
                 purchase_price = original_price
 
-            purchase_price = max(purchase_price, 1.99)
+            purchase_price = max(purchase_price, Decimal('1.99'))
 
             order_games_to_create.append(OrderGame(
                 order=order,
@@ -264,7 +285,7 @@ def create_reviews(library_games, all_games, big_devs):
         if game.developer in big_devs:
             rating = random.choices([4,5,3,2,1], weights=[0.40,0.40,0.15,0.04,0.01], k=1)[0]
         else:
-            rating = random.choices([4,5,3,2,1], weights=[0.40,0.20,0.25,0.10,0.05], k=1)[0]
+            rating = random.choices([4,5,3,2,1], weights=[0.25,0.20,0.40,0.10,0.05], k=1)[0]
 
         if random.random() < 0.25:
             review_comment = None

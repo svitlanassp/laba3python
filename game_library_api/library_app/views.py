@@ -1,4 +1,5 @@
 from decimal import Decimal
+import pandas as pd
 
 from django.db import transaction
 from django.utils import timezone
@@ -7,13 +8,16 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
+
 from library_app.repositories.repository_manager import RepositoryManager
 from .serializers import (
     GameSerializer, DeveloperSerializer,
     PublisherSerializer, GenreSerializer, GameGenreSerializer,
     UserSerializer, LibrarySerializer, OrderSerializer,
     LibraryGameSerializer, OrderGameSerializer, ReviewSerializer, PriceQualityReportSerializer,
-    GenrePlaytimeReportSerializer, MonthlyRevenueReportSerializer
+    GenrePlaytimeReportSerializer, MonthlyRevenueReportSerializer, DeveloperRevenueReportSerializer,
+    UserActivityReportSerializer, UserSpendingRankSerializer, WhalesGenreBreakdownSerializer,
+    BasicStatsResultSerializer, TopRatedGameSerializer
 )
 
 repo_manager = RepositoryManager()
@@ -77,6 +81,58 @@ class UserViewSet(BaseViewSet):
             'user_id': user.pk,
             'username': user.username,
             'balance': user.balance
+        })
+
+    @action(detail=False, methods=['get'], url_path='activity')
+    def user_activity_report(self,request):
+        min_playtime_str = request.query_params.get('min_playtime')
+        report_data = self.repo.get_user_activity_report()
+
+        if min_playtime_str:
+            try:
+                min_playtime = int(min_playtime_str)
+                report_data = report_data.filter(total_playtime__gte=min_playtime)
+            except ValueError:
+                pass
+
+        top_n_str = request.query_params.get('top_n')
+        if top_n_str:
+            try:
+                top_n = int(top_n_str)
+                report_data = report_data[:top_n]
+            except ValueError:
+                pass
+
+        serializer = UserActivityReportSerializer(report_data, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'],url_path='whales-analysis')
+    def whales_analysis(self,request):
+        year = request.query_params.get('year')
+        top_n = request.query_params.get('top_n',10)
+
+        user_ids_str = request.query_params.get('user_ids')
+        spending_rank_data = self.repo.get_spending_rank(year=year)
+
+        try:
+            top_n = int(top_n)
+            spending_rank_data = spending_rank_data[:top_n]
+        except ValueError:
+            pass
+
+        if user_ids_str:
+            selected_user_ids = [int(uid) for uid in user_ids_str.split(',') if uid.isdigit()]
+        else:
+            selected_user_ids = [user['id'] for user in spending_rank_data]
+
+        genre_breakdown_data = self.repo.get_whales_genre_breakdown(selected_user_ids)
+
+        rank_serializer = UserSpendingRankSerializer(spending_rank_data,many=True)
+        breakdown_serializer = WhalesGenreBreakdownSerializer(genre_breakdown_data,many=True)
+
+        return Response({
+            'spending_rank': rank_serializer.data,
+            'genre_breakdown': breakdown_serializer.data,
         })
 
     @action(detail=True, methods=['post'])
@@ -200,6 +256,52 @@ class GameViewSet(BaseViewSet):
             return Response({'error': f'Помилка транзакції: {type(e).__name__}: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=False, methods=['get'], url_path='top-rated')
+    def top_rated_games(self, request):
+        min_reviews_str = request.query_params.get('min_reviews', '10')
+        genre_name = request.query_params.get('genre')
+        top_n_str = request.query_params.get('top_n')
+
+        min_price_str = request.query_params.get('min_price')
+        max_price_str = request.query_params.get('max_price')
+
+        min_reviews = 10
+        min_price = None
+        max_price = None
+
+        try:
+            min_reviews = int(min_reviews_str)
+        except ValueError:
+            pass
+
+        try:
+            if min_price_str:
+                min_price = float(min_price_str)
+        except ValueError:
+            pass
+
+        try:
+            if max_price_str:
+                max_price = float(max_price_str)
+        except ValueError:
+            pass
+
+        report_data = self.repo.get_top_rated_games_report(
+            min_reviews=min_reviews,
+            genre_name=genre_name,
+            min_price=min_price,
+            max_price=max_price
+        )
+
+        if top_n_str:
+            try:
+                top_n = int(top_n_str)
+                report_data = report_data[:top_n]
+            except ValueError:
+                pass
+
+        serializer = TopRatedGameSerializer(report_data, many=True)
+        return Response(serializer.data)
 
 class OrderViewSet(BaseViewSet):
     repo = repo_manager.orders
@@ -262,6 +364,22 @@ class DeveloperViewSet(BaseViewSet):
     repo = repo_manager.developers
     serializer_class = DeveloperSerializer
 
+    @action(detail=False, methods=['get'], url_path='revenue')
+    def developer_revenue_report(self,request):
+        year = request.query_params.get('year')
+        top_n = request.query_params.get('top_n',50)
+
+        report_data = self.repo.get_revenue_report(year=year)
+
+        try:
+            top_n = int(top_n)
+            report_data = report_data[:top_n]
+        except ValueError:
+            pass
+
+        serializer = DeveloperRevenueReportSerializer(report_data,many=True)
+        return Response(serializer.data)
+
 class PublisherViewSet(BaseViewSet):
     repo = repo_manager.publishers
     serializer_class = PublisherSerializer
@@ -272,16 +390,22 @@ class GenreViewSet(BaseViewSet):
 
     @action(detail=False, methods=['get'], url_path='playtime-ranking')
     def playtime_ranking(self, request):
-        min_games = request.query_params.get('min_games',5)
-        report_data = self.repo.get_top_genres_by_playtime(min_games_count=int(min_games))
-        serializer = GenrePlaytimeReportSerializer(report_data,many=True)
+        min_unique_games_str = request.query_params.get('min_unique_games', '5')
+
+        try:
+            min_games = int(min_unique_games_str)
+        except ValueError:
+            min_games = 5
+
+        report_data = self.repo.get_top_genres_by_playtime(min_games_count=min_games)
+
+        serializer = GenrePlaytimeReportSerializer(report_data, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def count(self, request):
         report_data = self.repo.get_genre_game_count_report()
         return Response(report_data)
-
 
 class GameGenreViewSet(BaseViewSet):
     repo = repo_manager.game_genres
@@ -313,3 +437,38 @@ class ReviewViewSet(BaseViewSet):
 
         serializer = PriceQualityReportSerializer(report_data, many=True)
         return Response(serializer.data)
+
+class AnalyticsViewSet(BaseViewSet):
+    developer_repo = repo_manager.developers
+
+    @action(detail=False, methods=['get'],url_path='dev-revenue-stats')
+    def developer_revenue_stats(self, request):
+        report_data = self.developer_repo.get_revenue_report()
+
+        serializer = DeveloperRevenueReportSerializer(report_data, many=True)
+        data = serializer.data
+
+        df = pd.DataFrame(data)
+
+        if df.empty:
+            return Response({"error": "No developer data available"}, status=404)
+
+        df['total_revenue'] = pd.to_numeric(df['total_revenue'], errors='coerce')
+
+        stats = {
+            "metric": "Developer Total Revenue",
+            "mean": df['total_revenue'].mean(),
+            "median": df['total_revenue'].median(),
+            "min": df['total_revenue'].min(),
+            "max": df['total_revenue'].max(),
+            "std_dev": df['total_revenue'].std(),
+            "count": df['total_revenue'].count(),
+        }
+
+        top_5_developers = df.sort_values(by='total_revenue', ascending=False).head(5)
+
+        stats_serializer = BasicStatsResultSerializer(stats)
+        return Response({
+            "basic_stats": stats_serializer.data,
+            "top_5_pandas": top_5_developers[['name','total_revenue']].to_dict(orient='records'),
+        })
