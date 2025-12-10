@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Звіт: Активність Користувачів та Кореляція</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f9; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        h1 { color: #333; text-align: center; margin-bottom: 30px; }
+        .kpi-container { display: flex; justify-content: space-around; margin-bottom: 30px; }
+        .kpi-card { background: #e0f7fa; border-left: 5px solid #00bcd4; padding: 15px; border-radius: 4px; text-align: center; flex: 1; margin: 0 10px; }
+        .kpi-card h3 { margin: 0 0 5px; font-size: 1.1em; color: #00838f; }
+        .kpi-value { font-size: 2em; font-weight: bold; color: #00bcd4; }
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 30px; padding: 15px; background: #fafafa; border-radius: 4px; }
+        .controls label { font-weight: bold; color: #555; }
+        .controls input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .controls button { padding: 8px 15px; background-color: #00bcd4; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
+        .controls button:hover { background-color: #00acc1; }
+        .chart-container { height: 500px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="report-title">Звіт: Активність Користувачів (Завантаження...)</h1>
+
+        <div class="controls">
+            <div>
+                <label for="min_playtime">Мін. Час Гри (годин):</label>
+                <input type="number" id="min_playtime" value="0" min="0">
+            </div>
+            <div>
+                <label for="top_n">Обмежити графік Top N:</label>
+                <input type="number" id="top_n" placeholder="Усі" min="1">
+            </div>
+            <button onclick="fetchDataAndRender()">Завантажити</button>
+        </div>
+
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <h3>Активних Користувачів (у вибірці)</h3>
+                <div id="kpi-total-users" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Середній Час Гри</h3>
+                <div id="kpi-mean-playtime" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Медіана Придбаних Ігор</h3>
+                <div id="kpi-median-games" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>P75 Часу Гри</h3>
+                <div id="kpi-p75-playtime" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Кореляція (Час vs Ігри)</h3>
+                <div id="kpi-correlation" class="kpi-value">...</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div id="activityScatterChart"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000/api/reports/';
+
+        function formatHours(hours) {
+            return `${hours.toLocaleString('uk-UA')} год`;
+        }
+        function formatInteger(num) {
+            return num.toLocaleString('uk-UA');
+        }
+
+        async function fetchDataAndRender() {
+            const minPlaytime = document.getElementById('min_playtime').value;
+            const topN = document.getElementById('top_n').value;
+
+            const params = new URLSearchParams({
+                min_playtime: minPlaytime,
+                top_n: topN
+            });
+
+            const endpoint = `${API_BASE_URL}user-activity/?${params.toString()}`;
+
+            document.getElementById('report-title').innerText = "Завантаження...";
+            updateKPIs({});
+
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('report-title').innerText = data.report_name;
+
+                updateKPIs(data.analytics_stats);
+
+                const chartData = prepareScatterData(data.activity_data);
+
+                renderActivityScatterChart(chartData);
+
+            } catch (error) {
+                console.error("Помилка завантаження даних:", error);
+                document.getElementById('report-title').innerText = `Помилка завантаження: ${error.message}`;
+            }
+        }
+
+        function prepareScatterData(activityList) {
+            const usernames = [];
+            const playtime = [];
+            const gamesOwned = [];
+
+            activityList.forEach(item => {
+                usernames.push(item.username);
+                playtime.push(parseFloat(item.total_playtime));
+                gamesOwned.push(parseFloat(item.games_owned));
+            });
+
+            return { usernames, playtime, gamesOwned };
+        }
+
+        function updateKPIs(stats) {
+            const totalUsers = stats.total_active_users || 0;
+            const meanPlaytime = stats.mean_playtime || 0;
+            const medianGames = stats.median_games_owned || 0;
+            const p75Playtime = stats.p75_playtime || 0;
+            const correlation = stats.playtime_games_correlation;
+            const correlationText = correlation !== undefined && correlation !== null
+                                    ? correlation.toFixed(4)
+                                    : 'N/A';
+
+            document.getElementById('kpi-total-users').innerText = formatInteger(totalUsers);
+            document.getElementById('kpi-mean-playtime').innerText = formatHours(meanPlaytime);
+            document.getElementById('kpi-median-games').innerText = formatInteger(medianGames);
+            document.getElementById('kpi-p75-playtime').innerText = formatHours(p75Playtime);
+            document.getElementById('kpi-correlation').innerText = correlationText;
+        }
+
+        function renderActivityScatterChart(chartData) {
+            const trace = {
+                x: chartData.gamesOwned,
+                y: chartData.playtime,
+
+                text: chartData.usernames,
+
+                mode: 'markers',
+                type: 'scatter',
+
+                marker: {
+                    size: 10,
+                    color: '#00bcd4',
+                    line: {
+                        width: 1.5,
+                        color: '#00838f'
+                    }
+                },
+
+                hovertemplate:
+                    '<b>Користувач:</b> %{text}<br>' +
+                    '<b>Ігор у власності:</b> %{x}<br>' +
+                    '<b>Час гри:</b> %{y} год' +
+                    '<extra></extra>'
+            };
+
+            const layout = {
+                title: 'Кореляція: Придбані Ігри vs. Загальний Час Гри (Кожен користувач - точка)',
+                xaxis: { title: 'Кількість Придбаних Ігор' },
+                yaxis: { title: 'Загальний Час Гри (години)' },
+                hovermode: 'closest', // <-- Додаємо цю опцію для кращої чутливості
+                height: 500,
+                margin: { t: 50, b: 50, l: 50, r: 50 }
+            };
+
+            Plotly.newPlot('activityScatterChart', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+
+        window.onload = fetchDataAndRender;
+    </script>
+</body>
+</html>

@@ -137,12 +137,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['created_at']
 
-class PriceQualityReportSerializer(serializers.Serializer):
-    title = serializers.CharField(source='game__title')
-    price = serializers.DecimalField(source='game__price',max_digits=10,decimal_places=2)
-    avg_rating = serializers.FloatField()
-    reviews_count = serializers.IntegerField()
-    ratio = serializers.FloatField(source='price_quality_ratio')
 
 class GenrePlaytimeReportSerializer(serializers.Serializer):
     name = serializers.CharField(read_only=True)
@@ -152,17 +146,18 @@ class GenrePlaytimeReportSerializer(serializers.Serializer):
     unique_game_count = serializers.IntegerField(read_only=True)
 
 class MonthlyRevenueReportSerializer(serializers.Serializer):
-    order_year = serializers.IntegerField()
-    order_month = serializers.IntegerField()
-    total_revenue = serializers.DecimalField(max_digits=10,decimal_places=2)
+    order_year = serializers.IntegerField(read_only=True)
+    order_month = serializers.IntegerField(read_only=True)
+    total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
 class DeveloperRevenueReportSerializer(serializers.Serializer):
     developer_id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(read_only=True)
 
-    total_revenue = serializers.DecimalField(max_digits=10,decimal_places=2,read_only=True)
+    total_revenue = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    avg_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+
     total_copies_sold = serializers.IntegerField(read_only=True)
-    avg_price = serializers.DecimalField(max_digits=10,decimal_places=2,read_only=True)
 
 class UserActivityReportSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
@@ -189,12 +184,4 @@ class TopRatedGameSerializer(serializers.Serializer):
     avg_rating = serializers.FloatField()
     reviews_count = serializers.IntegerField()
 
-class BasicStatsResultSerializer(serializers.Serializer):
-    metric = serializers.CharField()
-    mean = serializers.FloatField()
-    median = serializers.FloatField()
-    min = serializers.FloatField()
-    max = serializers.FloatField()
-    std_dev = serializers.FloatField()
-    count = serializers.IntegerField()
 

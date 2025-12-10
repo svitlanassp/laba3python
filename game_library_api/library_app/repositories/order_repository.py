@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 
-from django.db.models.functions import ExtractYear, ExtractMonth
+from django.db.models.functions import ExtractYear, ExtractMonth, Coalesce
 from django.utils import timezone
 
 from library_app.models import Order
 from library_app.repositories.base_repository import BaseRepository
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, DecimalField
+
 
 class OrderRepository(BaseRepository):
     def __init__(self):
@@ -13,18 +14,6 @@ class OrderRepository(BaseRepository):
 
     def get_all_by_user_id(self, user_id):
         return self.model.objects.filter(user_id=user_id)
-
-    def get_user_spending_report(self):
-        return(
-            self.model.objects
-            .filter(status='complete')
-            .values('user__username')
-            .annotate(
-                total_orders=Count('order_id'),
-                total_spent=Sum('total_amount')
-            )
-            .order_by('-total_spent')
-        )
 
     def get_monthly_revenue_report(self, start_date_str=None, end_date_str=None):
         queryset = self.model.objects.filter(status='complete')
@@ -38,8 +27,6 @@ class OrderRepository(BaseRepository):
                     created_at__date__gte=naive_start,
                     created_at__date__lte=naive_end,
                 )
-
-
             except ValueError:
                 pass
 
@@ -51,7 +38,12 @@ class OrderRepository(BaseRepository):
             )
             .values('order_year', 'order_month')
             .annotate(
-                total_revenue=Sum('total_amount')
+                total_revenue=Coalesce(
+                    Sum('total_amount'),
+                    0.0,
+                    output_field=DecimalField(max_digits=10, decimal_places=2)
+                )
             )
+            .order_by('order_year', 'order_month')
         )
 

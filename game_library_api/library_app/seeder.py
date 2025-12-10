@@ -178,15 +178,10 @@ def create_purchases(users,games):
     for order in orders:
         num_games_in_order = random.randint(1,3)
 
-        # Вибираємо випадкову кількість ігор з ПОВНОГО списку
-        # Це збалансує вибірку, а не обмежить її лише найдорожчими
-        selection_pool = games  # Використовуємо всі ігри
+        selection_pool = games
 
-        # Вибираємо випадкову підмножину (наприклад, 20% ігор) для формування унікального замовлення
         temp_games = random.sample(selection_pool, min(int(len(selection_pool) * 0.2), len(selection_pool)))
 
-        # Сортуємо тимчасовий пул за ціною, щоб іноді брати дорожчі
-        # АБО просто беремо випадкові ігри
 
         selected_games = random.sample(temp_games, min(num_games_in_order, len(temp_games)))
 
@@ -316,7 +311,6 @@ def run_seeder():
     print("--- Початок наповнення бази даних ---")
 
     # Крок 0: Очищення
-    # (Для чистоти, використовуйте зовнішній SQL TRUNCATE, але якщо тут DELETE, теж працює)
     cleanup_data()
 
     # Крок 1: Базові сутності (Жанри, Розробники, Видавці)
@@ -332,12 +326,9 @@ def run_seeder():
     print(f"Створено ігор: {len(games)}")
 
     # Крок 4: Замовлення, Продажі та Бібліотеки
-    # Цей крок повертає список створених LibraryGame
     library_games = create_purchases(users, games)
-    # Виведення статистики відбувається всередині create_purchases
 
-    # Крок 5: Створення Відгуків (ТЕПЕР АКТИВОВАНО!)
-    # Передаємо LibraryGame для знаходження власників та Games/Devs для логіки рейтингу
+    # Крок 5: Створення Відгуків
     create_reviews(library_games, games, big_devs)
 
     print("\n--- Генерація даних завершена ---")

@@ -59,10 +59,6 @@ class GameRepository(BaseRepository):
             queryset = queryset.filter(price__lte=max_price)
 
 
-        # queryset = queryset.annotate(
-        #     genre_names=StringAgg('gamegenre__genre__name', delimiter=', ')
-        # )
-
         return queryset.order_by('-avg_rating', '-reviews_count').values(
             'game_id', 'title', 'price', 'avg_rating', 'reviews_count'
         )
