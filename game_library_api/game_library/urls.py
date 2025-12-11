@@ -65,6 +65,8 @@ urlpatterns = [
     path('api/reports/user-activity-bokeh/', UserActivityBokehAPIView.as_view(), name='user_activity_bokeh_api'),
     path('api/analysis/user-genre-breakdown/', UserGenreBreakdownAPIView.as_view(), name='user_genre_breakdown_api'),
 
+    path('parallel-test/', views_api.parallel_db_test_view, name='parallel_test'),
+
     path('client/', include('library_ui.urls')),
 
     path('', RedirectView.as_view(pattern_name='login', permanent=False), name='index'),

@@ -4,6 +4,11 @@
 
 {% block content %}
 
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div></div> <a href="{% url 'dashboard-menu' %}" class="btn btn-outline-primary btn-lg" style="border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            📊 Меню Дашборда
+        </a>
+    </div>
     <h2>Усі ігри в магазині</h2>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 30px;">
