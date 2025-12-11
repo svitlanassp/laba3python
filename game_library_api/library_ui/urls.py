@@ -7,4 +7,5 @@ urlpatterns = [
     path('buy/<int:pk>/', views_api.buy_game_view, name='buy_game'),
     path('top-up/', views_api.top_up_balance_view, name='top_up'),
     path('library/', views_api.library_view, name='library'),
+    path('parallel-test/', views_api.parallel_db_test_view, name='parallel_test'),
 ]
