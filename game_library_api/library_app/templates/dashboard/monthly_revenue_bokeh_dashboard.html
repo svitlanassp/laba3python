@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Звіт про Місячний Дохід (Bokeh V2)</title>
+    <title>Звіт про Місячний Дохід (V2)</title>
 
     <link rel="stylesheet" href="https://cdn.bokeh.org/bokeh/release/bokeh-3.8.1.min.css" type="text/css" />
 
@@ -34,7 +34,7 @@
 <body>
 
     <div class="container">
-        <h1 id="report-title">Звіт про Місячний Дохід (Bokeh V2) - Завантаження...</h1>
+        <h1 id="report-title">Звіт про Місячний Дохід - Завантаження...</h1>
 
         <div class="controls">
             <div>
@@ -45,7 +45,7 @@
                 <label for="end_date">Кінцева дата:</label>
                 <input type="date" id="end_date" value="2024-12-31">
             </div>
-            <button onclick="fetchDataAndRender()">Оновити Звіт</button>
+            <button onclick="fetchDataAndRender()">Оновити</button>
         </div>
 
         <div class="kpi-container">
@@ -155,9 +155,9 @@
                     chartDiv.innerHTML += data.script;
                 }
 
-                document.getElementById('report-title').innerText = "Звіт про Місячний Дохід (Bokeh V2)";
+                document.getElementById('report-title').innerText = "Звіт про Місячний Дохід (V2)";
 
-            } catch (error) { // Початок catch блоку
+            } catch (error) {
                 console.error("Помилка завантаження графіку Bokeh:", error);
                 chartDiv.innerHTML = `<p style="color: red;">Критична помилка завантаження графіку: ${error.message}</p>`;
                 document.getElementById('report-title').innerText = "Помилка завантаження";

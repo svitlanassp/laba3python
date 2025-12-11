@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Звіт: Дохід Розробників (Bokeh)</title>
+    <title>Звіт: Дохід Розробників (V2)</title>
 
     <link rel="stylesheet" href="https://cdn.bokeh.org/bokeh/release/bokeh-3.8.1.min.css" type="text/css" />
     <script src="https://cdn.bokeh.org/bokeh/release/bokeh-3.8.1.min.js" crossorigin="anonymous"></script>
@@ -22,7 +22,7 @@
         .controls input[type="number"], .controls input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 80px; }
         .controls button { padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
         .controls button:hover { background-color: #388E3C; }
-        .chart-container { height: 550px; display: flex; justify-content: center; align-items: center; }
+        .chart-container { height: 750px; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
@@ -39,7 +39,7 @@
                 <label for="top_n">Топ N:</label>
                 <input type="number" id="top_n" value="10" min="1">
             </div>
-            <button onclick="fetchDataAndRender()">Оновити Звіт</button>
+            <button onclick="fetchDataAndRender()">Оновити</button>
         </div>
 
         <div class="kpi-container">

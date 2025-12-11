@@ -34,7 +34,7 @@
                 <label for="top_n">Обмежити графік Top N:</label>
                 <input type="number" id="top_n" placeholder="Усі" min="1">
             </div>
-            <button onclick="fetchDataAndRender()">Завантажити</button>
+            <button onclick="fetchDataAndRender()">Оновити</button>
         </div>
 
         <div class="kpi-container">
@@ -171,7 +171,7 @@
                 title: 'Кореляція: Придбані Ігри vs. Загальний Час Гри (Кожен користувач - точка)',
                 xaxis: { title: 'Кількість Придбаних Ігор' },
                 yaxis: { title: 'Загальний Час Гри (години)' },
-                hovermode: 'closest', // <-- Додаємо цю опцію для кращої чутливості
+                hovermode: 'closest',
                 height: 500,
                 margin: { t: 50, b: 50, l: 50, r: 50 }
             };

@@ -45,7 +45,7 @@
                 <label for="max_price">Макс. Ціна:</label>
                 <input type="number" id="max_price" min="0" step="0.01" placeholder="50">
             </div>
-            <button onclick="fetchDataAndRender()">Завантажити</button>
+            <button onclick="fetchDataAndRender()">Оновити</button>
         </div>
 
         <div class="kpi-container">
@@ -117,7 +117,7 @@
                 min_reviews: minReviews,
                 genre: genreName,
                 min_price: minPrice,
-                max_price: maxPrice
+                max_price: maxPrice,
             });
 
             const endpoint = `${API_BASE_URL}top-rated-games/?${params.toString()}`;

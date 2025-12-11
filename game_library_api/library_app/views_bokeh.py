@@ -7,8 +7,8 @@ from library_app.serializers import MonthlyRevenueReportSerializer, GenrePlaytim
     DeveloperRevenueReportSerializer, TopRatedGameSerializer, WhalesGenreBreakdownSerializer, \
     UserSpendingRankSerializer, UserActivityReportSerializer
 from .utils import generate_monthly_revenue_bokeh_chart, generate_genre_playtime_bokeh_chart, \
-    generate_developer_revenue_bokeh_chart, generate_top_rated_games_bokeh_chart, generate_whales_analysis_bokeh_charts, \
-    generate_user_activity_bokeh_charts
+    generate_developer_revenue_bokeh_chart, generate_whales_analysis_bokeh_charts, \
+    generate_user_activity_bokeh_charts, generate_top_rated_games_bokeh_charts
 
 repo_manager = RepositoryManager()
 
@@ -51,9 +51,6 @@ class GenrePlaytimeBokehAPIView(APIView):
 
 
 class DeveloperRevenueBokehAPIView(APIView):
-    """
-    Повертає компоненти Bokeh для графіку рейтингу розробників за доходом.
-    """
 
     def get(self, request, *args, **kwargs):
         year = request.query_params.get('year')
@@ -84,17 +81,18 @@ class TopRatedGamesBokehAPIView(APIView):
         genre_name = request.query_params.get('genre')
         min_price_str = request.query_params.get('min_price')
         max_price_str = request.query_params.get('max_price')
-
-        top_n = 30
+        top_n_str = request.query_params.get('top_n', '10')
 
         try:
             min_reviews = int(min_reviews_str)
             min_price = float(min_price_str) if min_price_str else None
             max_price = float(max_price_str) if max_price_str else None
+            top_n = int(top_n_str)
         except ValueError:
             min_reviews = 10
             min_price = None
             max_price = None
+            top_n = 30
 
         report_data_qs = repo_manager.games.get_top_rated_games_report(
             min_reviews=min_reviews,
@@ -102,15 +100,17 @@ class TopRatedGamesBokehAPIView(APIView):
             min_price=min_price,
             max_price=max_price
         )
+
         serializer = TopRatedGameSerializer(report_data_qs, many=True)
         list_of_dicts = serializer.data
 
-        script, div = generate_top_rated_games_bokeh_chart(list_of_dicts, top_n=top_n)
+        script, div = generate_top_rated_games_bokeh_charts(list_of_dicts, top_n=top_n)
 
         return Response({
             "script": script,
             "div": div
         })
+
 
 
 class UserGenreBreakdownAPIView(APIView):

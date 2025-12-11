@@ -76,7 +76,6 @@ def generate_genre_playtime_bokeh_chart(data_dicts):
 
     df = df.sort_values(by='avg_playtime_per_copy', ascending=True)
 
-    # Визначаємо жанри для осі Y (Category)
     genre_list = df['name'].tolist()
 
     source = ColumnDataSource(df)
@@ -115,36 +114,47 @@ def generate_genre_playtime_bokeh_chart(data_dicts):
 
 
 def generate_developer_revenue_bokeh_chart(data_dicts):
+    from bokeh.layouts import column
+    from bokeh.models import DataTable, TableColumn, StringFormatter, NumberFormatter
+
     if not data_dicts:
-        p = figure(height=350, width=800, title="Немає даних для відображення",
-                   x_axis_label="Дохід ($)", y_axis_label="Розробник")
-        return components(p)
+        empty_p = figure(height=200, width=800, title="Немає даних для відображення")
+        return components(empty_p)
 
     df = pd.DataFrame(data_dicts)
-    df['total_revenue'] = pd.to_numeric(df['total_revenue'])
+    df['total_revenue'] = pd.to_numeric(df['total_revenue'], errors='coerce')
+    df['total_copies_sold'] = pd.to_numeric(df['total_copies_sold'], errors='coerce')
+    df['avg_price'] = pd.to_numeric(df['avg_price'], errors='coerce')
     df['name'] = df['name'].astype(str)
 
     df = df.sort_values(by='total_revenue', ascending=True)
-
     developer_list = df['name'].tolist()
 
     source = ColumnDataSource(df)
 
     p = figure(
         y_range=developer_list,
-        height=500,
+        height=400,
         width=1000,
-        title="ТОП Розробників за Загальним Доходом",
+        title=f"ТОП {len(df)} Розробників за Загальним Доходом",
         x_axis_label="Загальний Дохід ($)",
         y_axis_label="Розробник",
-        tools="pan,wheel_zoom,box_zoom,reset,save,hover"
+        tools="pan,wheel_zoom,box_zoom,reset,save,hover",
+        tooltips=[
+            ("Розробник", "@name"),
+            ("Дохід", "@total_revenue{$0,0.00}"),
+            ("Копій продано", "@total_copies_sold{0,0}"),
+            ("Середня ціна", "@avg_price{$0,0.00}")
+        ]
     )
+
     p.hbar(
         y='name',
         right='total_revenue',
-        height=0.8,
+        height=0.7,
         source=source,
-        fill_color=factor_cmap('name', palette=Category20[len(developer_list) if len(developer_list) <= 20 else 20],
+        fill_color=factor_cmap('name',
+                               palette=Category20[len(developer_list) if len(developer_list) <= 20 else 20],
                                factors=developer_list),
         line_color='white',
         legend_label="Дохід"
@@ -154,67 +164,157 @@ def generate_developer_revenue_bokeh_chart(data_dicts):
     p.toolbar.autohide = True
     p.yaxis.major_label_orientation = 0.8
     p.xgrid.grid_line_color = None
-
     p.xaxis.formatter = NumeralTickFormatter(format="$0,0.00")
 
-    script, div = components(p)
+    columns = [
+        TableColumn(field="name", title="Розробник",
+                    width=250, formatter=StringFormatter(font_style="bold")),
+        TableColumn(field="total_revenue", title="Дохід ($)", width=150,
+                    formatter=NumberFormatter(format="$0,0.00", text_align="right")),
+        TableColumn(field="total_copies_sold", title="Копій продано", width=120,
+                    formatter=NumberFormatter(format="0,0", text_align="right")),
+        TableColumn(field="avg_price", title="Середня ціна", width=150,
+                    formatter=NumberFormatter(format="$0,0.00", text_align="right"))
+    ]
+
+    data_table = DataTable(
+        source=source,
+        columns=columns,
+        width=1000,
+        height=250,
+        editable=False,
+        sortable=True,
+        selectable="checkbox",
+        index_position=None,
+        autosize_mode="none",
+        fit_columns=False
+    )
+
+    layout = column(p, data_table)
+    script, div = components(layout)
     return script, div
 
+def generate_top_rated_games_bokeh_charts(data_dicts, top_n=None):
+    from bokeh.layouts import row
 
-def generate_top_rated_games_bokeh_chart(data_dicts, top_n=30):
     if not data_dicts:
-        p = figure(height=350, width=800, title="Немає даних для відображення",
-                   x_axis_label="Середній Рейтинг", y_axis_label="Гра")
-        return components(p)
+        p1 = figure(height=400, width=500, title="Немає даних для рейтингів")
+        p2 = figure(height=400, width=400, title="Немає даних для цінового розподілу")
+        return components(row(p1, p2))
+
+    if top_n is None:
+        top_n = 10
 
     df = pd.DataFrame(data_dicts)
-    df['avg_rating'] = pd.to_numeric(df['avg_rating'])
+    df['avg_rating'] = pd.to_numeric(df['avg_rating'], errors='coerce')
+    df['price'] = pd.to_numeric(df['price'], errors='coerce')
     df['title'] = df['title'].astype(str)
 
     df = df.sort_values(by='avg_rating', ascending=True)
     df = df.tail(top_n)
 
     game_list = df['title'].tolist()
-
     source = ColumnDataSource(df)
 
-    p = figure(
+    p1 = figure(
         y_range=game_list,
-        height=700,
-        width=1000,
+        height=600,
+        width=600,
         title=f"ТОП {top_n} Ігор за Середнім Рейтингом",
         x_axis_label="Середній Рейтинг (від 0 до 5)",
         y_axis_label="Назва Гри",
-        tools="pan,wheel_zoom,box_zoom,reset,save,hover"
+        tools="pan,wheel_zoom,box_zoom,reset,save,hover",
+        tooltips=[("Гра", "@title"), ("Рейтинг", "@avg_rating{0.00}"), ("Ціна", "@price{$0,0.00}")]
     )
 
-    p.hbar(
+    p1.hbar(
         y='title',
         right='avg_rating',
-        height=0.8,
+        height=0.7,
         source=source,
-        fill_color=factor_cmap('title', palette=Category20[len(game_list) if len(game_list) <= 20 else 20],
+        fill_color=factor_cmap('title',
+                               palette=Category20[len(game_list) if len(game_list) <= 20 else 20],
                                factors=game_list),
         line_color='white',
         legend_label="Рейтинг"
     )
-    p.vspan(
+
+    p1.vspan(
         x=4.0,
         line_width=2,
         line_color='red',
         line_dash='dashed',
-        legend_label="Високий Рейтинг"
+        legend_label="Високий Рейтинг (≥4.0)"
     )
 
-    p.title.align = "center"
-    p.toolbar.autohide = True
-    p.x_range.end = 5.0
+    p1.title.align = "center"
+    p1.toolbar.autohide = True
+    p1.x_range.end = 5.0
+    p1.xaxis.formatter = NumeralTickFormatter(format="0.0")
+    p1.yaxis.major_label_orientation = 0.8
 
-    p.xaxis.formatter = NumeralTickFormatter(format="0.0")
+    price_categories = {
+        'Безкоштовні ($0.00)': (df['price'] == 0).sum(),
+        'Дешеві (до $25.00)': ((df['price'] > 0) & (df['price'] <= 25)).sum(),
+        'Середні ($25.01-$50.00)': ((df['price'] > 25) & (df['price'] <= 50)).sum(),
+        'Дорогі (>$50.00)': (df['price'] > 50).sum()
+    }
 
-    script, div = components(p)
+    categories = []
+    values = []
+    colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+
+    for (label, value) in price_categories.items():
+        if value > 0:
+            categories.append(label)
+            values.append(value)
+
+    if not values:
+        p2 = figure(height=400, width=400,
+                    title=f"Ціновий Розподіл (Топ-{top_n})",
+                    toolbar_location=None)
+        p2.title.text = "Немає даних для цінового розподілу"
+        p2.title.align = "center"
+    else:
+        total = sum(values)
+        angles = [value / total * 2 * np.pi for value in values]
+        start_angles = np.cumsum([0] + angles[:-1])
+        end_angles = np.cumsum(angles)
+        percentages = [(value / total * 100) for value in values]
+
+        source_pie = ColumnDataSource(data=dict(
+            categories=categories,
+            values=values,
+            colors=colors[:len(categories)],
+            start=start_angles,
+            end=end_angles,
+            percent=percentages
+        ))
+
+        p2 = figure(height=400, width=400,
+                    title=f"Ціновий Розподіл (Топ-{top_n})",
+                    toolbar_location=None,
+                    tools="hover",
+                    tooltips="@categories: @values ігор (@percent{0.1}%)",
+                    x_range=(-0.5, 1.0))
+
+        p2.wedge(x=0, y=1, radius=0.35,
+                 start_angle='start',
+                 end_angle='end',
+                 line_color="white",
+                 fill_color='colors',
+                 legend_field='categories',
+                 source=source_pie)
+
+        p2.axis.visible = False
+        p2.grid.grid_line_color = None
+        p2.title.align = "center"
+        p2.legend.location = "top_left"
+        p2.legend.background_fill_alpha = 0.7
+
+    layout = row(p1, p2)
+    script, div = components(layout)
     return script, div
-
 
 def generate_whales_analysis_bokeh_charts(rank_data_dicts, initial_genre_breakdown_data_dicts):
     if not rank_data_dicts:
@@ -278,7 +378,6 @@ def generate_whales_analysis_bokeh_charts(rank_data_dicts, initial_genre_breakdo
 
     callback_code = f"""
         const indices = rank_source.selected.indices;
-        const pie_source = pie_source; 
         const p_genre_title = p_genre.title;
         const genre_colors = {js_genre_colors}; 
         const ajax_path = '{AJAX_PATH}';
