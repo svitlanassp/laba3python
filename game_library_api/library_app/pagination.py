@@ -7,7 +7,6 @@ class StandardPagination(PageNumberPagination):
     max_page_size = 1000
 
     def get_paginated_response(self, data):
-        """Повертає пагіновану відповідь"""
         return Response({
             'count': self.page.paginator.count if hasattr(self, 'page') and self.page else len(data),
             'next': self.get_next_link(),
@@ -15,3 +14,4 @@ class StandardPagination(PageNumberPagination):
             'results': data
 
         })
+
