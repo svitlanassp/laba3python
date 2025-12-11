@@ -7,17 +7,31 @@ class NetworkHelper:
         self.API_BASE_URL = base_url
         self.AUTH = auth
 
-    def get_all_games(self):
+    def get_all_games(self, page=None, page_size=None):
         try:
-            response = requests.get(self.API_BASE_URL + 'games/', auth=self.AUTH)
+            params = {}
+            if page is not None:
+                params['page'] = page
+            if page_size is not None:
+                params['page_size'] = page_size
+
+            response = requests.get(
+                self.API_BASE_URL + 'games/',
+                auth=self.AUTH,
+                params=params
+            )
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            print(f"Помилка отримання ігор: {e}")
             return []
 
     def get_game_details(self, game_id):
         try:
-            response = requests.get(f"{self.API_BASE_URL}games/{game_id}/", auth=self.AUTH)
+            response = requests.get(
+                f"{self.API_BASE_URL}games/{game_id}/",
+                auth=self.AUTH
+            )
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException:

@@ -1,6 +1,6 @@
 from decimal import Decimal
 import pandas as pd
-
+from .pagination import StandardPagination
 from django.db import transaction
 from django.shortcuts import render
 from django.utils import timezone
@@ -29,9 +29,26 @@ class BaseViewSet(viewsets.ViewSet):
     serializer_class = None
     authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
-
+    pagination_class = StandardPagination
     def list(self, request):
         items = self.repo.get_all()
+
+        if self.pagination_class:
+            paginator = self.pagination_class()
+
+            page_size = request.query_params.get(paginator.page_size_query_param)
+            if page_size:
+                try:
+                    paginator.page_size = int(page_size)
+                except (ValueError, TypeError):
+                    pass
+
+            page = paginator.paginate_queryset(items, request)
+
+            if page is not None:
+                serializer = self.serializer_class(page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
         serializer = self.serializer_class(items, many=True)
         return Response(serializer.data)
 
@@ -68,6 +85,7 @@ class BaseViewSet(viewsets.ViewSet):
 class UserViewSet(BaseViewSet):
     repo = repo_manager.users
     serializer_class = UserSerializer
+    pagination_class = StandardPagination
 
     @action(detail=True, methods=['get'])
     def data(self, request, pk=None):
@@ -122,14 +140,29 @@ class UserViewSet(BaseViewSet):
 class GameViewSet(BaseViewSet):
     repo = repo_manager.games
     serializer_class = GameSerializer
+    pagination_class = StandardPagination
 
     def list(self, request):
         items = self.repo.get_all()
 
         user_owned_game_ids = set()
-
         if request.user.is_authenticated:
             user_owned_game_ids = repo_manager.library_games.get_owned_game_ids_by_user(request.user.id)
+
+        if self.pagination_class:
+            try:
+                paginator = self.pagination_class()
+                page = paginator.paginate_queryset(items, request, view=self)
+
+                if page is not None:
+                    serializer = self.serializer_class(
+                        page,
+                        many=True,
+                        context={'user_owned_game_ids': user_owned_game_ids}
+                    )
+                    return paginator.get_paginated_response(serializer.data)
+            except Exception:
+                pass
 
         serializer = self.serializer_class(
             items,
@@ -213,12 +246,14 @@ class GameViewSet(BaseViewSet):
 class OrderViewSet(BaseViewSet):
     repo = repo_manager.orders
     serializer_class = OrderSerializer
+    pagination_class = StandardPagination
 
 
 
 class LibraryViewSet(BaseViewSet):
     repo = repo_manager.libraries
     serializer_class = LibrarySerializer
+    pagination_class = StandardPagination
 
     def list(self, request):
         user_id = request.query_params.get('user')
@@ -226,15 +261,13 @@ class LibraryViewSet(BaseViewSet):
         if user_id:
             try:
                 library = self.repo.get_by_user(user_id)
-
                 if library:
                     serializer = self.serializer_class(library)
                     return Response([serializer.data])
                 else:
                     return Response([])
-
             except Exception as e:
-                return Response({'error': f'Некоректний ID користувача для фільтрації: {e}'},
+                return Response({'error': f'Некоректний ID користувача: {e}'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
         return super().list(request)
@@ -242,33 +275,41 @@ class LibraryViewSet(BaseViewSet):
 class LibraryGameViewSet(BaseViewSet):
     repo = repo_manager.library_games
     serializer_class = LibraryGameSerializer
+    pagination_class = StandardPagination
 
 
 class OrderGameViewSet(BaseViewSet):
     repo = repo_manager.order_games
     serializer_class = OrderGameSerializer
+    pagination_class = StandardPagination
+
 
 
 class DeveloperViewSet(BaseViewSet):
     repo = repo_manager.developers
     serializer_class = DeveloperSerializer
+    pagination_class = StandardPagination
 
 
 class PublisherViewSet(BaseViewSet):
     repo = repo_manager.publishers
     serializer_class = PublisherSerializer
+    pagination_class = StandardPagination
 
 class GenreViewSet(BaseViewSet):
     repo = repo_manager.genres
     serializer_class = GenreSerializer
+    pagination_class = StandardPagination
 
 class GameGenreViewSet(BaseViewSet):
     repo = repo_manager.game_genres
     serializer_class = GameGenreSerializer
+    pagination_class = StandardPagination
 
 class ReviewViewSet(BaseViewSet):
     repo = repo_manager.reviews
     serializer_class = ReviewSerializer
+    pagination_class = StandardPagination
 
     @action(detail=False, methods=['get'])
     def by_game(self,request):
