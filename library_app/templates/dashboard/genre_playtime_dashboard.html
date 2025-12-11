@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Звіт: Середній Час Гри за Жанрами (Plotly)</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f9; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        h1 { color: #333; text-align: center; margin-bottom: 30px; }
+        .kpi-container { display: flex; justify-content: space-around; margin-bottom: 30px; }
+        .kpi-card { background: #e8f5e9; border-left: 5px solid #4CAF50; padding: 15px; border-radius: 4px; text-align: center; flex: 1; margin: 0 10px; }
+        .kpi-card h3 { margin: 0 0 5px; font-size: 1.1em; color: #388e3c; }
+        .kpi-value { font-size: 2em; font-weight: bold; color: #4CAF50; }
+        .controls { display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 30px; padding: 15px; background: #fafafa; border-radius: 4px; }
+        .controls label { font-weight: bold; color: #555; }
+        .controls input[type="range"] { flex: 1; max-width: 300px; }
+        .controls span { min-width: 20px; text-align: right; }
+        .controls button { padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; }
+        .controls button:hover { background-color: #388e3c; }
+        .chart-container { height: 400px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="report-title">Звіт: Середній Час Гри за Жанрами (Завантаження...)</h1>
+
+        <div class="controls">
+            <label for="min_unique_games">Мін. кількість унікальних ігор у жанрі:</label>
+            <input type="range" id="min_unique_games" min="1" max="50" step="1" value="5" onchange="updateSliderValue(this.value)">
+            <span id="slider-value">5</span>
+            <button onclick="fetchDataAndRender()">Оновити</button>
+        </div>
+
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <h3>Середнє по всіх жанрах</h3>
+                <div id="kpi-mean-avg-playtime" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Макс. Середній Час</h3>
+                <div id="kpi-max-avg-playtime" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Мінімальний Час</h3>
+                <div id="kpi-min-avg-playtime" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Медіана Середнього Часу</h3>
+                <div id="kpi-median-avg-playtime" class="kpi-value">...</div>
+            </div>
+            <div class="kpi-card">
+                <h3>Жанрів у Звіті</h3>
+                <div id="kpi-genres-count" class="kpi-value">...</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div id="playtimeChart"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000/api/reports/';
+
+        function updateSliderValue(value) {
+            document.getElementById('slider-value').innerText = value;
+        }
+
+        async function fetchDataAndRender() {
+            const minGames = document.getElementById('min_unique_games').value;
+            const endpoint = `${API_BASE_URL}genre-playtime/?min_unique_games=${minGames}`;
+
+            document.getElementById('report-title').innerText = "Завантаження...";
+
+            updateKPIs({});
+
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('report-title').innerText = data.report_name;
+
+                updateKPIs(data.analytics_stats);
+
+                const chartData = prepareChartData(data.time_series_data);
+
+                renderChart(chartData.labels, chartData.playtimes);
+
+            } catch (error) {
+                console.error("Помилка завантаження даних:", error);
+                document.getElementById('report-title').innerText = `Помилка завантаження: ${error.message}`;
+            }
+        }
+
+        function prepareChartData(seriesData) {
+            const labels = [];
+            const playtimes = [];
+
+            seriesData.forEach(item => {
+                labels.push(item.name);
+                playtimes.push(parseFloat(item.avg_playtime_per_copy));
+            });
+
+            return { labels, playtimes };
+        }
+
+
+        function updateKPIs(stats) {
+            const meanPlaytime = (stats.mean_avg_playtime || 0).toFixed(2);
+            const maxPlaytime = (stats.max_avg_playtime || 0).toFixed(2);
+            const minPlaytime = (stats.min_avg_playtime || 0).toFixed(2);
+            const medianPlaytime = (stats.median_avg_playtime || 0).toFixed(2);
+            const genresCount = stats.total_genres_in_report || 0;
+
+            document.getElementById('kpi-mean-avg-playtime').innerText = `${meanPlaytime} год`;
+            document.getElementById('kpi-max-avg-playtime').innerText = `${maxPlaytime} год`;
+            document.getElementById('kpi-min-avg-playtime').innerText = `${minPlaytime} год`;
+            document.getElementById('kpi-median-avg-playtime').innerText = `${medianPlaytime} год`;
+            document.getElementById('kpi-genres-count').innerText = genresCount;
+        }
+
+        function renderChart(labels, data) {
+            const chartDiv = document.getElementById('playtimeChart');
+
+            const trace = {
+                x: labels,
+                y: data,
+                type: 'bar',
+                name: 'Середній Час Гри',
+                marker: {
+                    color: '#4CAF50'
+                },
+                hovertemplate:
+                    '<b>Жанр:</b> %{x}<br>' +
+                    '<b>Середній час:</b> %{y:.2f} год' +
+                    '<extra></extra>'
+            };
+
+            const plotData = [trace];
+
+            const layout = {
+                title: 'Рейтинг Жанрів за Середнім Часом Гри',
+                xaxis: {
+                    title: 'Жанр',
+                    automargin: true
+                },
+                yaxis: {
+                    title: 'Середній Час Гри (години)',
+                    zeroline: true
+                },
+                margin: { t: 50, b: 100 },
+                height: 400
+            };
+
+            Plotly.newPlot(chartDiv, plotData, layout, {
+                responsive: true,
+                displayModeBar: false
+            });
+        }
+
+        window.onload = fetchDataAndRender;
+    </script>
+</body>
+</html>

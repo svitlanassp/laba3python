@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Магазин ігор{% endblock %}
+
+{% block content %}
+
+    <h2>Усі ігри в магазині</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-top: 30px;">
+        {% for game in games %}
+            <div style="border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <h3 style="margin-top: 0;">
+                    <a href="{% url 'game_detail' pk=game.game_id %}" style="text-decoration: none; color: #3498db;">{{ game.title }}</a>
+                </h3>
+
+                <p style="color: #7f8c8d; font-size: 0.9em;">
+                    Розробник: {{ game.developer_name|default:"N/A" }}
+                </p>
+
+                <p style="font-size: 0.85em; color: #34495e; min-height: 40px;">
+                    {% for genre in game.genre_names %}
+                        <span style="display: inline-block; background-color: #ecf0f1; padding: 3px 8px; border-radius: 3px; margin-right: 5px;">#{{ genre }}</span>
+                    {% endfor %}
+                </p>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                    {% if game.is_owned %}
+                        <span style="color: #27ae60; font-weight: bold; font-size: 0.9rem;">✔ Придбано</span>
+
+                    {% else %}
+                        <span style="font-size: 1.2rem; font-weight: bold; color: #2ecc71;">{{ game.price }} $</span>
+
+                        <a href="{% url 'game_detail' pk=game.game_id %}" class="btn btn-primary">
+                            Переглянути →
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <p style="grid-column: 1/-1; text-align: center; padding: 50px; border: 2px dashed #e0e0e0; border-radius: 8px; color: #7f8c8d;">Наразі ігор у магазині немає.</p>
+        {% endfor %}
+    </div>
+
+    {% if games.has_other_pages %}
+    <div class="pagination" style="margin-top: 40px; margin-bottom: 40px; display: flex; justify-content: center; align-items: center; gap: 15px;">
+
+        {% if games.has_previous %}
+            <a href="?page=1" class="btn btn-secondary" style="text-decoration: none;">&laquo; Перша</a>
+            <a href="?page={{ games.previous_page_number }}" class="btn btn-secondary" style="text-decoration: none;">&lsaquo; Назад</a>
+        {% endif %}
+
+        <span class="current" style="font-weight: bold; font-size: 1.1em;">
+            Сторінка {{ games.number }} з {{ games.paginator.num_pages }}
+        </span>
+
+        {% if games.has_next %}
+            <a href="?page={{ games.next_page_number }}" class="btn btn-secondary" style="text-decoration: none;">Вперед &rsaquo;</a>
+            <a href="?page={{ games.paginator.num_pages }}" class="btn btn-secondary" style="text-decoration: none;">Остання &raquo;</a>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+{% endblock %}
