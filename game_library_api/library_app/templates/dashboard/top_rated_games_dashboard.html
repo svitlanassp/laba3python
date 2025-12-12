@@ -45,7 +45,7 @@
                 <label for="max_price">Макс. Ціна:</label>
                 <input type="number" id="max_price" min="0" step="0.01" placeholder="50">
             </div>
-            <button onclick="fetchDataAndRender()">Завантажити</button>
+            <button onclick="fetchDataAndRender()">Оновити</button>
         </div>
 
         <div class="kpi-container">
@@ -82,15 +82,28 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://127.0.0.1:8000/api/reports/';
+        const API_BASE_URL = '/api/reports/';
+
+        const PRICE_THRESHOLDS = {
+            LOW: 25,
+            HIGH: 50
+        };
+
+        const PRICE_LABELS = {
+            CHEAP: `Дешеві ($0 - $${PRICE_THRESHOLDS.LOW})`,
+            MEDIUM: `Середні ($${PRICE_THRESHOLDS.LOW + 0.01} - $${PRICE_THRESHOLDS.HIGH})`,
+            EXPENSIVE: `Дорогі (>$${PRICE_THRESHOLDS.HIGH})`
+        };
+
         const ALL_GENRES = [
             "Action", "RPG", "Strategy", "Simulation", "Puzzle",
             "Horror", "Sports", "Adventure", "Indie", "MMO", "Platformer",
             "Survival", "Rogue-like"
         ];
+
+
         function populateGenreDropdown() {
             const selectElement = document.getElementById('genre_name');
-
             ALL_GENRES.forEach(genre => {
                 const option = document.createElement('option');
                 option.value = genre;
@@ -107,6 +120,7 @@
             }).format(amount);
         }
 
+
         async function fetchDataAndRender() {
             const minReviews = document.getElementById('min_reviews').value;
             const genreName = document.getElementById('genre_name').value;
@@ -117,15 +131,16 @@
                 min_reviews: minReviews,
                 genre: genreName,
                 min_price: minPrice,
-                max_price: maxPrice
+                max_price: maxPrice,
             });
 
-            const endpoint = `${API_BASE_URL}top-rated-games/?${params.toString()}`;
+            const endpoint = `${API_BASE_URL}top-rated-games-bokeh/?${params.toString()}`.replace('-bokeh', '');
 
             document.getElementById('report-title').innerText = "Завантаження...";
             updateKPIs({});
 
             try {
+
                 const response = await fetch(endpoint);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -149,7 +164,6 @@
 
         function prepareChartData(seriesData) {
             const top10 = seriesData.slice(0, 10);
-
             const titles = top10.map(item => item.title);
             const ratings = top10.map(item => parseFloat(item.avg_rating).toFixed(2));
             const prices = top10.map(item => parseFloat(item.price));
@@ -171,6 +185,7 @@
             document.getElementById('kpi-mean-price').innerText = formatCurrency(meanPrice);
         }
 
+
         function renderRatingChart(titles, ratings) {
             const trace = {
                 x: titles,
@@ -191,20 +206,20 @@
 
         function renderPricePieChart(prices) {
             const priceBins = {
-                'Дешеві ($10.00 - $25.00)': 0,
-                'Середні ($25.01 - $50.00)': 0,
-                'Дорогі (>$50.00)': 0
+                [PRICE_LABELS.CHEAP]: 0,
+                [PRICE_LABELS.MEDIUM]: 0,
+                [PRICE_LABELS.EXPENSIVE]: 0
             };
 
             const paidPrices = prices.filter(price => price > 0);
 
             paidPrices.forEach(price => {
-                if (price <= 25) {
-                    priceBins['Дешеві ($10.00 - $25.00)']++;
-                } else if (price <= 50) {
-                    priceBins['Середні ($25.01 - $50.00)']++;
+                if (price <= PRICE_THRESHOLDS.LOW) {
+                    priceBins[PRICE_LABELS.CHEAP]++;
+                } else if (price <= PRICE_THRESHOLDS.HIGH) {
+                    priceBins[PRICE_LABELS.MEDIUM]++;
                 } else {
-                    priceBins['Дорогі (>$50.00)']++;
+                    priceBins[PRICE_LABELS.EXPENSIVE]++;
                 }
             });
 
